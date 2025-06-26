@@ -1,0 +1,163 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# TypeScript Coding Conventions for khala-ts Project
+
+## Type System
+
+### Type Definitions
+- Use `type` instead of `interface` for all type definitions
+- **Never use `enum`** - use union of string literals instead: `type Status = 'pending' | 'success' | 'error'`
+- **Never use `class`** - define functions instead for better functional programming approach
+- Prefer explicit type annotations over type inference when it improves readability
+- Use union types for variables that can have multiple specific values
+- Use generic types for reusable components and utilities
+
+### Type Annotations
+- Always annotate function parameters and return types
+- Use `void` for functions that don't return values
+- Use `never` for functions that never return (throw errors)
+- Prefer `const` assertions for literal types
+
+### Advanced Types
+- Use utility types like `Partial<T>`, `Pick<T>`, `Omit<T>` appropriately
+- Use conditional types for complex type logic
+- Use mapped types for transforming existing types
+- Use template literal types for string manipulation
+
+## Code Style and Formatting
+
+### Naming Conventions
+- Variables: camelCase
+- Functions: camelCase
+- Classes: PascalCase
+- Types: PascalCase
+- Constants: UPPER_SNAKE_CASE
+- Files: camelCase.ts
+- Directories: camelCase
+
+### Import/Export Patterns
+- Use named exports over default exports
+- Group imports: external libraries, internal modules, relative imports
+- Use type-only imports when appropriate: `import type { ... }`
+- Prefer barrel exports for clean import statements
+
+### Function Patterns
+- Keep functions under 50 lines, abstract subfunctions if needed
+- Use functional programming style where appropriate
+- Prefer pure functions over impure ones
+- Use arrow functions for callbacks and short functions
+
+## Architecture and Structure
+
+### Module Organization
+- **Separate types and implementations completely**
+- **`/decl` folder** (declarations): Contains only type definitions that generate no JavaScript code
+  - Can have hierarchy to represent type namespaces
+  - No `index.ts` files allowed in `/decl` folder or its subfolders
+  - Files must be imported using absolute paths
+  - Use `.ts` extension (not `.types.ts`)
+  - Example: `/decl/user/auth.ts`, `/decl/api/response.ts`
+- **`/impl` folder** (implementations): Contains only implementation code with no type declarations
+  - Can have hierarchy for organizing implementations
+  - Each file exports exactly one function as default export
+  - File name must match the exported function name
+  - Subfolder names are function names (not domain names like "api" or "user")
+  - Subfolders can have `index.ts` files
+  - `index.ts` files export one function as default, function name matches folder name
+  - Files in subfolders are subfunctions of the function implemented in `index.ts`
+  - Example: `/impl/createUser.ts`, `/impl/fetchData/index.ts`, `/impl/fetchData/validateInput.ts`
+
+### Test Organization
+- Each file or subfolder in `/impl` has a corresponding test folder with `-test` prefix
+- Test folder is a sibling to the implementation file/folder
+- Example: `foo.ts` tests go in `foo-test/` folder
+- Example: `bar/` folder tests go in `bar-test/` folder
+- Test files should mirror the structure of implementation files
+
+### Import/Export Patterns
+- Types from `/decl` must use absolute imports: `import type { User } from '/decl/user/auth.types'`
+- Implementations from `/impl` use relative imports within the same module
+- No barrel exports in `/decl` folder
+- Barrel exports allowed in `/impl` subfolders via `index.ts`
+
+## Best Practices
+
+### Type Safety
+- Enable strict mode in tsconfig.json
+- Use `noImplicitAny` and `strictNullChecks`
+- Avoid type assertions unless absolutely necessary
+- Use type guards for runtime type checking
+
+### Performance
+- Use `const` assertions for immutable data
+- Prefer `readonly` arrays and objects
+- Use proper generic constraints
+- Avoid unnecessary type computations
+
+### Error Handling
+- Use Result types for error handling
+- Implement proper error boundaries
+- Use exhaustive checking with discriminated unions
+- Handle null/undefined explicitly
+
+## Tools and Configuration
+
+### TypeScript Configuration
+- Enable strict mode
+- Use path mapping for clean imports:
+  - `"@d/*"` maps to `"/decl/*"` for type declarations
+  - `"@i/*"` maps to `"/impl/*"` for implementations
+- Configure proper module resolution
+- Set appropriate target and lib options
+
+### Linting Rules
+- Use ESLint with TypeScript-specific rules
+- Enable `@typescript-eslint` recommended rules
+- Configure import/export rules
+- Set up proper formatting rules
+
+### Code Quality
+- Use Prettier for consistent formatting
+- Configure proper line length and indentation
+- Use consistent quote style (single vs double)
+- Set up proper semicolon usage
+
+## Testing
+
+### Type Testing
+- Use TypeScript compiler for type checking
+- Write type-level tests for complex types
+- Use `expectType` utilities for type assertions
+- Test edge cases in type definitions
+
+### Unit Testing
+- Use Jest with TypeScript support
+- Mock types appropriately
+- Test both happy path and error cases
+- Use proper type annotations in tests
+
+## Documentation
+
+### Type Documentation
+- Use JSDoc for complex type definitions
+- Document generic type parameters
+- Provide usage examples for utility types
+- Document type constraints and limitations
+
+### Code Comments
+- Comment complex type logic
+- Explain why certain type patterns are used
+- Document workarounds for TypeScript limitations
+- Keep comments up to date with code changes
+
+
+
+
+
+
+
+
+
