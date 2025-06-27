@@ -1,0 +1,130 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# TypeScript Coding Conventions (Concise)
+
+## Core Rules
+
+### Types & Interfaces
+- Use `type` instead of `interface`
+- Never use `enum` - use union types: `type Status = "pending" | "success" | "error"`
+- Never use `class` - use functions instead
+- Always annotate function parameters and return types
+
+```typescript
+// ✅ Good
+type User = { id: string; name: string };
+const createUser = (name: string): User => ({ id: crypto.randomUUID(), name });
+
+// ❌ Bad
+interface User { id: string; name: string; }
+enum Status { Pending, Success, Error; }
+class UserService { constructor() {} }
+```
+
+### Naming
+- Variables/Functions: camelCase
+- Types: PascalCase  
+- Constants: UPPER_SNAKE_CASE
+- Files/Directories: camelCase
+
+```typescript
+// ✅ Good
+const userName = "john";
+const createUser = () => {};
+type UserProfile = {};
+const MAX_RETRIES = 3;
+
+// ❌ Bad
+const user_name = "john";
+const CreateUser = () => {};
+type userProfile = {};
+const maxRetries = 3;
+```
+
+### Import/Export Patterns
+- **Export Rules:**
+  - `/decl` folder: named exports for types
+  - `/impl` folder: default export for functions
+- **Import Organization:**
+  - Group: Node.js built-in, external, internal modules
+  - Always use "node:" prefix for Node.js built-in modules
+  - Separate type and implementation imports
+  - Use `import type { ... }` for types
+  - Remove unused imports
+- **Path Conventions:**
+  - Relative paths for same folder/subfolders
+  - `@d` for `/decl`, `@i` for `/impl`
+
+```typescript
+// ✅ Good
+import { readFileSync } from "node:fs";
+import axios from "axios";
+import type { User } from "@d/user/auth";
+import createUser from "@i/createUser";
+
+// ❌ Bad
+import { readFileSync } from "fs"; // missing "node:" prefix
+import { User } from "@d/user/auth"; // missing 'type'
+```
+
+### Code Style
+- Double quotes only
+- Always semicolons
+- Trailing commas only when closing bracket on new line
+- Keep functions under 50 lines
+
+```typescript
+// ✅ Good
+const config = {
+  apiUrl: "https://api.example.com",
+  timeout: 5000,
+};
+
+const users = [
+  { id: "1", name: "Alice" },
+  { id: "2", name: "Bob" },
+];
+
+// ❌ Bad
+const config = { apiUrl: 'https://api.example.com', timeout: 5000 }
+const users = [{ id: "1", name: "Alice" }, { id: "2", name: "Bob" }]
+```
+
+### Testing
+- Use Bun's built-in test framework
+- Test both success and error cases
+- Use proper type annotations in tests
+
+```typescript
+// ✅ Good
+import { describe, it, expect } from "bun:test";
+
+describe("createUser", () => {
+  it("should create user with valid data", () => {
+    const result = createUser({ name: "John", email: "john@example.com" });
+    expect(result.name).toBe("John");
+  });
+  
+  it("should throw for invalid email", () => {
+    expect(() => createUser({ name: "John", email: "invalid" })).toThrow();
+  });
+});
+```
+
+### Architecture
+- `/decl` folder: type definitions only, no index.ts files
+- `/impl` folder: implementation only, one function per file
+- File name matches exported function name
+- Test folders: `-test` suffix
+
+```
+/decl/user/auth.ts          # type User = { ... }
+/impl/createUser.ts         # export default createUser
+/impl/createUser-test/      # tests for createUser
+```
+
+
+

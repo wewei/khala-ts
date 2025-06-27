@@ -23,6 +23,13 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "noPropertyAccessFromIndexSignature": false,
+
+    // Path mapping for import/export patterns
+    "baseUrl": ".",
+    "paths": {
+      "@d/*": ["./decl/*"],
+      "@i/*": ["./impl/*"]
+    }
   }
 }

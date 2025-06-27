@@ -9,46 +9,369 @@ alwaysApply: false
 
 ### Type Definitions
 - Use `type` instead of `interface` for all type definitions
+  ```typescript
+  // ✅ Good
+  type User = {
+    id: string;
+    name: string;
+    email: string;
+  };
+  
+  // ❌ Bad
+  interface User {
+    id: string;
+    name: string;
+    email: string;
+  }
+  ```
 - **Never use `enum`** - use union of string literals instead: `type Status = 'pending' | 'success' | 'error'`
+  ```typescript
+  // ✅ Good
+  type Status = "pending" | "success" | "error";
+  type UserRole = "admin" | "user" | "moderator";
+  
+  // ❌ Bad
+  enum Status {
+    Pending = "pending",
+    Success = "success",
+    Error = "error",
+  }
+  ```
 - **Never use `class`** - define functions instead for better functional programming approach
+  ```typescript
+  // ✅ Good
+  type User = {
+    id: string;
+    name: string;
+  };
+  
+  const createUser = (name: string): User => ({
+    id: crypto.randomUUID(),
+    name,
+  });
+  
+  const updateUserName = (user: User, newName: string): User => ({
+    ...user,
+    name: newName,
+  });
+  
+  // ❌ Bad
+  class User {
+    constructor(public id: string, public name: string) {}
+    
+    updateName(newName: string): void {
+      this.name = newName;
+    }
+  }
+  ```
 - Prefer explicit type annotations over type inference when it improves readability
+  ```typescript
+  // ✅ Good - explicit when helpful
+  const users: User[] = [];
+  const status: Status = "pending";
+  
+  // ✅ Good - inference when obvious
+  const count = 42;
+  const message = "Hello, world!";
+  ```
 - Use union types for variables that can have multiple specific values
+  ```typescript
+  // ✅ Good
+  type ApiResponse<T> = {
+    data: T;
+    status: "success" | "error";
+    message?: string;
+  };
+  
+  // ❌ Bad
+  type ApiResponse<T> = {
+    data: T;
+    status: string; // too broad
+    message?: string;
+  };
+  ```
 - Use generic types for reusable components and utilities
+  ```typescript
+  // ✅ Good
+  type Result<T, E = Error> = {
+    success: true;
+    data: T;
+  } | {
+    success: false;
+    error: E;
+  };
+  
+  type Optional<T> = T | null | undefined;
+  ```
 
 ### Type Annotations
 - Always annotate function parameters and return types
+  ```typescript
+  // ✅ Good
+  const add = (a: number, b: number): number => a + b;
+  const getUser = (id: string): User | null => { /* ... */ };
+  
+  // ❌ Bad
+  const add = (a, b) => a + b; // no type annotations
+  const getUser = (id) => { /* ... */ }; // no return type
+  ```
 - Use `void` for functions that don't return values
+  ```typescript
+  // ✅ Good
+  const logMessage = (message: string): void => {
+    console.log(message);
+  };
+  
+  const updateUser = (user: User): void => {
+    // side effect only, no return
+  };
+  ```
 - Use `never` for functions that never return (throw errors)
+  ```typescript
+  // ✅ Good
+  const throwError = (message: string): never => {
+    throw new Error(message);
+  };
+  
+  const infiniteLoop = (): never => {
+    while (true) {
+      // never returns
+    }
+  };
+  ```
 - Prefer `const` assertions for literal types
+  ```typescript
+  // ✅ Good
+  const STATUSES = ["pending", "success", "error"] as const;
+  type Status = typeof STATUSES[number]; // "pending" | "success" | "error"
+  
+  const CONFIG = {
+    apiUrl: "https://api.example.com",
+    timeout: 5000,
+  } as const;
+  
+  // ❌ Bad
+  const STATUSES = ["pending", "success", "error"]; // type is string[]
+  ```
 
 ### Advanced Types
 - Use utility types like `Partial<T>`, `Pick<T>`, `Omit<T>` appropriately
+  ```typescript
+  // ✅ Good
+  type User = {
+    id: string;
+    name: string;
+    email: string;
+    age: number;
+  };
+  
+  type UserUpdate = Partial<User>; // all fields optional
+  type UserBasic = Pick<User, "id" | "name">; // only id and name
+  type UserWithoutId = Omit<User, "id">; // everything except id
+  
+  // ❌ Bad - manually creating similar types
+  type UserUpdate = {
+    id?: string;
+    name?: string;
+    email?: string;
+    age?: number;
+  };
+  ```
 - Use conditional types for complex type logic
+  ```typescript
+  // ✅ Good
+  type NonNullable<T> = T extends null | undefined ? never : T;
+  type ArrayElement<T> = T extends Array<infer U> ? U : never;
+  
+  type Result<T> = T extends string ? "string" : "other";
+  ```
 - Use mapped types for transforming existing types
+  ```typescript
+  // ✅ Good
+  type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+  };
+  
+  type Optional<T> = {
+    [P in keyof T]?: T[P];
+  };
+  
+  type ApiResponse<T> = {
+    data: T;
+    status: "success" | "error";
+  };
+  ```
 - Use template literal types for string manipulation
+  ```typescript
+  // ✅ Good
+  type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
+  type ApiEndpoint = `/api/${string}`;
+  type UserEndpoint = `/api/users/${string}`;
+  
+  type EventName = `on${Capitalize<string>}`;
+  // "onClick" | "onSubmit" | "onChange" | etc.
+  ```
 
 ## Code Style and Formatting
 
 ### Naming Conventions
 - Variables: camelCase
+  ```typescript
+  // ✅ Good
+  const userName = "john";
+  const isActive = true;
+  const apiResponse = { data: [] };
+  
+  // ❌ Bad
+  const user_name = "john";
+  const is_active = true;
+  const API_RESPONSE = { data: [] };
+  ```
 - Functions: camelCase
+  ```typescript
+  // ✅ Good
+  const getUserById = (id: string): User => { /* ... */ };
+  const validateEmail = (email: string): boolean => { /* ... */ };
+  
+  // ❌ Bad
+  const get_user_by_id = (id: string): User => { /* ... */ };
+  const ValidateEmail = (email: string): boolean => { /* ... */ };
+  ```
 - Classes: PascalCase
+  ```typescript
+  // ✅ Good (if classes were allowed)
+  class UserService { /* ... */ }
+  class ApiClient { /* ... */ }
+  
+  // ❌ Bad
+  class userService { /* ... */ }
+  class api_client { /* ... */ }
+  ```
 - Types: PascalCase
+  ```typescript
+  // ✅ Good
+  type UserProfile = { /* ... */ };
+  type ApiResponse<T> = { /* ... */ };
+  
+  // ❌ Bad
+  type userProfile = { /* ... */ };
+  type api_response<T> = { /* ... */ };
+  ```
 - Constants: UPPER_SNAKE_CASE
+  ```typescript
+  // ✅ Good
+  const MAX_RETRY_ATTEMPTS = 3;
+  const DEFAULT_TIMEOUT = 5000;
+  const API_BASE_URL = "https://api.example.com";
+  
+  // ❌ Bad
+  const maxRetryAttempts = 3;
+  const defaultTimeout = 5000;
+  ```
 - Files: camelCase.ts
+  ```typescript
+  // ✅ Good
+  userService.ts
+  apiClient.ts
+  validationUtils.ts
+  
+  // ❌ Bad
+  user-service.ts
+  ApiClient.ts
+  validation_utils.ts
+  ```
 - Directories: camelCase
-
-### Import/Export Patterns
-- Use named exports over default exports
-- Group imports: external libraries, internal modules, relative imports
-- Use type-only imports when appropriate: `import type { ... }`
-- Prefer barrel exports for clean import statements
+  ```
+  // ✅ Good
+  userManagement/
+  apiIntegration/
+  validationUtils/
+  
+  // ❌ Bad
+  user-management/
+  ApiIntegration/
+  validation_utils/
+  ```
 
 ### Function Patterns
 - Keep functions under 50 lines, abstract subfunctions if needed
+  ```typescript
+  // ✅ Good - broken down into smaller functions
+  const processUserData = (userData: RawUserData): ProcessedUser => {
+    const validatedData = validateUserData(userData);
+    const enrichedData = enrichUserData(validatedData);
+    return formatUserData(enrichedData);
+  };
+  
+  const validateUserData = (data: RawUserData): ValidatedUserData => {
+    // validation logic
+  };
+  
+  const enrichUserData = (data: ValidatedUserData): EnrichedUserData => {
+    // enrichment logic
+  };
+  
+  const formatUserData = (data: EnrichedUserData): ProcessedUser => {
+    // formatting logic
+  };
+  
+  // ❌ Bad - one large function
+  const processUserData = (userData: RawUserData): ProcessedUser => {
+    // 100+ lines of mixed validation, enrichment, and formatting logic
+  };
+  ```
 - Use functional programming style where appropriate
+  ```typescript
+  // ✅ Good - functional approach
+  const users = [
+    { id: "1", name: "Alice", age: 25 },
+    { id: "2", name: "Bob", age: 30 },
+    { id: "3", name: "Charlie", age: 35 },
+  ];
+  
+  const activeUsers = users
+    .filter(user => user.age >= 18)
+    .map(user => ({ ...user, status: "active" }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  
+  // ❌ Bad - imperative approach
+  const activeUsers = [];
+  for (const user of users) {
+    if (user.age >= 18) {
+      const userWithStatus = { ...user, status: "active" };
+      activeUsers.push(userWithStatus);
+    }
+  }
+  activeUsers.sort((a, b) => a.name.localeCompare(b.name));
+  ```
 - Prefer pure functions over impure ones
+  ```typescript
+  // ✅ Good - pure function
+  const add = (a: number, b: number): number => a + b;
+  const formatName = (firstName: string, lastName: string): string => 
+    `${firstName} ${lastName}`;
+  
+  // ❌ Bad - impure function with side effects
+  let counter = 0;
+  const incrementCounter = (): number => {
+    counter++; // side effect
+    return counter;
+  };
+  ```
 - Use arrow functions for callbacks and short functions
+  ```typescript
+  // ✅ Good
+  const numbers = [1, 2, 3, 4, 5];
+  const doubled = numbers.map(n => n * 2);
+  const evenNumbers = numbers.filter(n => n % 2 === 0);
+  
+  const add = (a: number, b: number): number => a + b;
+  
+  // ❌ Bad - verbose for simple operations
+  const doubled = numbers.map(function(n) {
+    return n * 2;
+  });
+  ```
 
 ## Architecture and Structure
 
@@ -78,10 +401,61 @@ alwaysApply: false
 - Test files should mirror the structure of implementation files
 
 ### Import/Export Patterns
-- Types from `/decl` must use absolute imports: `import type { User } from '/decl/user/auth.types'`
-- Implementations from `/impl` use relative imports within the same module
-- No barrel exports in `/decl` folder
-- Barrel exports allowed in `/impl` subfolders via `index.ts`
+- **Type Imports from `/decl`:**
+  - Use path alias `@d` for absolute imports: `import type { User } from '@d/user/auth'`
+  - Always use named exports for types
+  ```typescript
+  // ✅ Good
+  import type { User, UserRole } from "@d/user/auth";
+  import type { ApiResponse, ApiError } from "@d/api/response";
+  
+  // ❌ Bad
+  import { User } from "@d/user/auth"; // missing 'type'
+  import type User from "@d/user/auth"; // should be named export
+  ```
+- **Implementation Imports from `/impl`:**
+  - Use relative imports within the same module/folder
+  - Use path alias `@i` for cross-module imports: `import createUser from '@i/createUser'`
+  - Always use default exports for functions
+  ```typescript
+  // ✅ Good
+  import createUser from "@i/createUser";
+  import { validateInput } from "./validateInput"; // relative import within same folder
+  
+  // ❌ Bad
+  import { createUser } from "@i/createUser"; // should be default import
+  import createUser from "../../impl/createUser"; // use path alias instead
+  ```
+- **Import Organization:**
+  - Group imports: Node.js built-in modules, external modules, internal modules
+  - Always use "node:" prefix for Node.js built-in modules
+  - Separate type and implementation imports from the same module
+  - Use `import type { ... }` for type imports
+  - Proactively remove unused imports
+  ```typescript
+  // ✅ Good
+  // Node.js built-in modules
+  import { readFileSync, writeFileSync } from "node:fs";
+  import { join } from "node:path";
+  import { createServer } from "node:http";
+  
+  // External modules
+  import axios from "axios";
+  import type { AxiosResponse } from "axios";
+  
+  // Internal modules
+  import type { User, UserRole } from "@d/user/auth";
+  import createUser from "@i/createUser";
+  import { validateEmail } from "./validation";
+  
+  // ❌ Bad
+  import axios from "axios";
+  import { readFileSync } from "fs"; // missing "node:" prefix
+  import type { User } from "@d/user/auth";
+  import createUser from "@i/createUser";
+  import { AxiosResponse } from "axios"; // mixed with implementation imports
+  import { writeFileSync } from "node:fs"; // not grouped with other fs imports
+  ```
 
 ## Best Practices
 
@@ -108,8 +482,8 @@ alwaysApply: false
 ### TypeScript Configuration
 - Enable strict mode
 - Use path mapping for clean imports:
-  - `"@d/*"` maps to `"/decl/*"` for type declarations
-  - `"@i/*"` maps to `"/impl/*"` for implementations
+  - `"@d/*"` maps to `"./decl/*"` for type declarations
+  - `"@i/*"` maps to `"./impl/*"` for implementations
 - Configure proper module resolution
 - Set appropriate target and lib options
 
@@ -122,8 +496,63 @@ alwaysApply: false
 ### Code Quality
 - Use Prettier for consistent formatting
 - Configure proper line length and indentation
-- Use consistent quote style (single vs double)
-- Set up proper semicolon usage
+- Use double quotes consistently (not single quotes)
+  ```typescript
+  // ✅ Good
+  const message = "Hello, world!";
+  const user = { name: "John", age: 30 };
+  const template = `User ${user.name} is ${user.age} years old`;
+  
+  // ❌ Bad
+  const message = 'Hello, world!';
+  const user = { name: 'John', age: 30 };
+  ```
+- Always add semicolons at the end of each statement
+  ```typescript
+  // ✅ Good
+  const name = "John";
+  const age = 30;
+  const user = { name, age };
+  
+  // ❌ Bad
+  const name = "John"
+  const age = 30
+  const user = { name, age }
+  ```
+- Always add trailing commas after the last item in lists, objects, and parameter lists only when the closing bracket is not on the same line
+  ```typescript
+  // ✅ Good - multi-line with trailing commas
+  const users = [
+    { id: "1", name: "Alice" },
+    { id: "2", name: "Bob" },
+    { id: "3", name: "Charlie" },
+  ];
+  
+  const config = {
+    apiUrl: "https://api.example.com",
+    timeout: 5000,
+    retries: 3,
+  };
+  
+  const createUser = (
+    name: string,
+    email: string,
+    age: number,
+  ): User => {
+    // implementation
+  };
+  
+  // ✅ Good - single line without trailing commas
+  const users = [{ id: "1", name: "Alice" }, { id: "2", name: "Bob" }];
+  const config = { apiUrl: "https://api.example.com", timeout: 5000 };
+  
+  // ❌ Bad - multi-line without trailing commas
+  const users = [
+    { id: "1", name: "Alice" },
+    { id: "2", name: "Bob" },
+    { id: "3", name: "Charlie" } // missing comma
+  ];
+  ```
 
 ## Testing
 
@@ -131,33 +560,102 @@ alwaysApply: false
 - Use TypeScript compiler for type checking
 - Write type-level tests for complex types
 - Use `expectType` utilities for type assertions
+  ```typescript
+  // ✅ Good - type testing with expectType
+  import { expectType } from "tsd";
+  
+  type User = { id: string; name: string };
+  type UserUpdate = Partial<User>;
+  
+  // Test that UserUpdate has optional properties
+  expectType<UserUpdate>({ id: "1" }); // ✅ Should work
+  expectType<UserUpdate>({ name: "John" }); // ✅ Should work
+  expectType<UserUpdate>({ id: "1", name: "John" }); // ✅ Should work
+  
+  // Test utility types
+  type Result = NonNullable<string | null | undefined>;
+  expectType<Result>("hello"); // ✅ Should work
+  // expectType<Result>(null); // ❌ Should fail
+  ```
 - Test edge cases in type definitions
+  ```typescript
+  // ✅ Good - testing edge cases
+  type ApiResponse<T> = {
+    data: T;
+    status: "success" | "error";
+  };
+  
+  // Test with different data types
+  expectType<ApiResponse<string>>({ data: "hello", status: "success" });
+  expectType<ApiResponse<number>>({ data: 42, status: "error" });
+  expectType<ApiResponse<User>>({ data: { id: "1", name: "John" }, status: "success" });
+  ```
 
 ### Unit Testing
-- Use Jest with TypeScript support
+- Use Bun's built-in test framework
+  ```typescript
+  // ✅ Good - Bun test example
+  import { describe, it, expect } from "bun:test";
+  import createUser from "@i/createUser";
+  import type { User } from "@d/user/auth";
+  
+  describe("createUser", () => {
+    it("should create a user with valid data", () => {
+      const userData = { name: "John", email: "john@example.com" };
+      const result = createUser(userData);
+      
+      expect(result).toBeDefined();
+      expect(result.name).toBe("John");
+      expect(result.email).toBe("john@example.com");
+      expect(typeof result.id).toBe("string");
+    });
+    
+    it("should throw error for invalid email", () => {
+      const userData = { name: "John", email: "invalid-email" };
+      
+      expect(() => createUser(userData)).toThrow("Invalid email format");
+    });
+  });
+  ```
 - Mock types appropriately
+  ```typescript
+  // ✅ Good - mocking with proper types
+  import { mock } from "bun:test";
+  import type { ApiClient } from "@d/api/client";
+  
+  const mockApiClient: ApiClient = {
+    get: mock(() => Promise.resolve({ data: { id: "1", name: "John" } })),
+    post: mock(() => Promise.resolve({ data: { success: true } })),
+  };
+  ```
 - Test both happy path and error cases
+  ```typescript
+  // ✅ Good - comprehensive testing
+  describe("validateEmail", () => {
+    it("should return true for valid emails", () => {
+      expect(validateEmail("user@example.com")).toBe(true);
+      expect(validateEmail("test.user+tag@domain.co.uk")).toBe(true);
+    });
+    
+    it("should return false for invalid emails", () => {
+      expect(validateEmail("invalid-email")).toBe(false);
+      expect(validateEmail("user@")).toBe(false);
+      expect(validateEmail("@domain.com")).toBe(false);
+      expect(validateEmail("")).toBe(false);
+    });
+  });
+  ```
 - Use proper type annotations in tests
-
-## Documentation
-
-### Type Documentation
-- Use JSDoc for complex type definitions
-- Document generic type parameters
-- Provide usage examples for utility types
-- Document type constraints and limitations
-
-### Code Comments
-- Comment complex type logic
-- Explain why certain type patterns are used
-- Document workarounds for TypeScript limitations
-- Keep comments up to date with code changes
-
-
-
-
-
-
-
-
-
+  ```typescript
+  // ✅ Good - typed test data
+  const testUsers: User[] = [
+    { id: "1", name: "Alice", email: "alice@example.com" },
+    { id: "2", name: "Bob", email: "bob@example.com" },
+  ];
+  
+  it("should filter users by name", () => {
+    const result = filterUsersByName(testUsers, "Alice");
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe("Alice");
+  });
+  ```
