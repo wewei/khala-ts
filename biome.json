@@ -49,52 +49,15 @@
       },
       "style": {
         "useImportType": "error",
-        "useNodejsImportProtocol": "error",
         "useConst": "error",
         "useTemplate": "error",
         "useShorthandArrayType": "error",
         "useShorthandAssign": "error",
         "useBlockStatements": "error",
-        "noNonNullAssertion": "error",
-        "useOptionalChain": "error",
-        "useNullishCoalescing": "error",
-        "useNamingConvention": [
-          "error",
-          {
-            "selector": "variable",
-            "format": ["camelCase"],
-            "leadingUnderscore": "forbid",
-            "trailingUnderscore": "forbid"
-          },
-          {
-            "selector": "function",
-            "format": ["camelCase"],
-            "leadingUnderscore": "forbid",
-            "trailingUnderscore": "forbid"
-          },
-          {
-            "selector": "parameter",
-            "format": ["camelCase"],
-            "leadingUnderscore": "forbid",
-            "trailingUnderscore": "forbid"
-          },
-          {
-            "selector": "typeLike",
-            "format": ["PascalCase"],
-            "leadingUnderscore": "forbid",
-            "trailingUnderscore": "forbid"
-          },
-          {
-            "selector": "enumMember",
-            "format": ["UPPER_SNAKE_CASE"],
-            "leadingUnderscore": "forbid",
-            "trailingUnderscore": "forbid"
-          }
-        ]
+        "noNonNullAssertion": "error"
       },
       "nursery": {
-        "useImportRestrictions": "error",
-        "useNodejsImportProtocol": "error"
+        "useImportRestrictions": "error"
       }
     }
   },
@@ -108,22 +71,9 @@
       "semicolons": "always"
     }
   },
-  "typescript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "trailingCommas": "es5",
-      "semicolons": "always"
-    }
-  },
   "json": {
     "formatter": {
       "trailingCommas": "none"
-    }
-  },
-  "imports": {
-    "organizeImports": {
-      "enabled": true,
-      "ignore": []
     }
   }
 } 
