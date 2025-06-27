@@ -1,25 +1,23 @@
 # Khala - Shared TypeScript Code Database
 
 > **En aru'din Khala** - StarCraft High Templar
+> ![Protoss Khala Network Illustration](docs/assets/Khala.webp)
+> *Illustration: The Khala, the psychic network connecting every Protoss warrior (StarCraft)*
 
-<p align="center">
-  <img src="docs/assets/Khala.webp" alt="Protoss Khala Network Illustration" width="600"/>
-</p>
-<p align="center"><em>Illustration: The Khala, the psychic network connecting every Protoss warrior (StarCraft)</em></p>
-
-
-Inspired by the Protoss Khala network from StarCraft. Khala is a shared TypeScript code database that stores and indexes functions and types. It provides literal indexing, code graph (dependency) indexing, and semantic indexing capabilities. The system is accessed through the CLI tool `khala`.
-
+Inspired by the Protoss Khala network from StarCraft. Khala is a shared TypeScript code database that stores and indexes
+functions and types. It provides literal indexing, code graph (dependency) indexing, and semantic indexing capabilities.
+The system is accessed through the CLI tool `khala`.
 
 ## 🎯 Vision
 
-Khala aims to create a global network of reusable TypeScript code, enabling developers to discover, share, and reuse high-quality functions and types across projects. Think of it as a "GitHub for functions" with semantic search capabilities.
+Khala aims to create a global network of reusable TypeScript code, enabling developers to discover, share, and reuse
+high-quality functions and types across projects. Think of it as a "GitHub for functions" with semantic search capabilities.
 
 ## 🏗️ Architecture
 
 ### Core Components
 
-```
+```text
 khala-ts/
 ├── /decl/           # Type definitions (type namespaces, no index.ts)
 │   ├── core/
@@ -29,7 +27,8 @@ khala-ts/
 ├── /impl/           # Implementation code (structure to be discussed)
 ```
 
-_Note: The structure of `/impl` will be discussed and refined later. All tests should be colocated in the `/impl` folder using `-test` suffix folders. There is no separate `/tests/` folder._
+*Note: The structure of `/impl` will be discussed and refined later. All tests should be colocated in the `/impl` folder
+using `-test` suffix folders. There is no separate `/tests/` folder.*
 
 ### Indexing System
 
@@ -40,6 +39,7 @@ _Note: The structure of `/impl` will be discussed and refined later. All tests s
 ## 🚀 CLI Commands
 
 ### `khala connect`
+
 Connect current Bun codebase with Khala, enabling access to stored functions and types.
 
 ```bash
@@ -47,11 +47,13 @@ khala connect [--workspace <path>] [--config <config-file>]
 ```
 
 **Features:**
+
 - Auto-discovery of project structure
 - Type resolution and dependency mapping
 - Integration with existing TypeScript projects
 
 ### `khala search`
+
 Perform semantic search to find relevant functions and types based on descriptions.
 
 ```bash
@@ -61,12 +63,14 @@ khala search --limit 10 --sort-by relevance
 ```
 
 **Features:**
+
 - Natural language queries
 - Semantic similarity matching
 - Filtering by type, language, tags
 - Relevance scoring
 
 ### `khala add`
+
 Send TypeScript files to Khala for analysis and indexing.
 
 ```bash
@@ -76,12 +80,14 @@ khala add --exclude "**/*.test.ts" src/
 ```
 
 **Features:**
+
 - Automatic function and type extraction
 - Dependency analysis
 - Metadata generation (tags, descriptions)
 - Version control integration
 
 ### `khala update`
+
 Update existing functions or types in Khala.
 
 ```bash
@@ -90,12 +96,14 @@ khala update --name "validateEmail" --version "2.0.0"
 ```
 
 **Features:**
+
 - Version management
 - Change tracking
 - Backward compatibility checking
 - Dependency impact analysis
 
 ### `khala delete`
+
 Remove functions or types from Khala.
 
 ```bash
@@ -104,11 +112,13 @@ khala delete --name "validateEmail" --version "1.0.0"
 ```
 
 **Features:**
+
 - Safe deletion with dependency checks
 - Archive functionality
 - Bulk operations
 
 ### `khala bundle`
+
 Create Bun packages from Khala functions and types with dependencies.
 
 ```bash
@@ -117,12 +127,14 @@ khala bundle --types "User,ApiResponse" --include-deps
 ```
 
 **Features:**
+
 - Dependency resolution
 - Package.json generation
 - TypeScript declarations
 - Tree-shaking optimization
 
 ### `khala inspect`
+
 Inspect code structure and metadata in Khala.
 
 ```bash
@@ -133,6 +145,7 @@ khala inspect --stats
 ```
 
 **Subcommands:**
+
 - `inspect function` - Function details and metadata
 - `inspect type` - Type definitions and usage
 - `inspect dependencies` - Dependency relationships
@@ -166,7 +179,8 @@ bun test
 
 ### Code Quality
 
-This project uses [Biome](https://biomejs.dev/) for linting and formatting, configured to match the TypeScript coding conventions defined in `.cursor/typescript.mdc`.
+This project uses [Biome](https://biomejs.dev/) for linting and formatting, configured to match the TypeScript coding
+conventions defined in `.cursor/typescript.mdc`.
 
 #### Available Scripts
 

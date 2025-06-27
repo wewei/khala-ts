@@ -1,0 +1,152 @@
+---
+description: 
+globs: *.md,*.mdc
+alwaysApply: false
+---
+# Markdown Guidelines for Khala
+
+## General Principles
+- Write clear, concise, and well-structured documentation.
+- Use proper English grammar, spelling, and punctuation.
+- Prefer active voice and direct instructions.
+
+## Headings
+- Use ATX-style headings (`#`, `##`, `###`, etc.).
+- Only one `#` H1 heading per document (usually the title).
+- All other headings should use `##` or lower.
+- The first line in a Markdown file should be a top-level heading (`#`).
+- Increment heading levels by one (no skipping levels).
+- Leave a blank line before and after headings.
+
+## Line Length & Spacing
+- Limit lines to 120 characters when possible.
+- Leave a blank line between paragraphs, lists, and headings.
+- No trailing spaces at the end of lines.
+- No multiple consecutive blank lines.
+
+## Lists
+- Use `-` for unordered lists, not `*` or `+`.
+- Use `1.` for ordered lists (let Markdown auto-number).
+- Leave a blank line before and after lists.
+- Indent nested list items by two spaces.
+
+## Code Blocks & Inline Code
+- Use triple backticks (```) for fenced code blocks.
+- **Always specify a language for fenced code blocks** (e.g., ```bash, ```typescript, ```markdown).
+- Use single backticks for inline code.
+- Leave a blank line before and after code blocks.
+
+## Links & Images
+- Use `[text](mdc:url)` for links.
+- Use `![alt text](mdc:url)` for images, always provide alt text.
+- Reference local images with relative paths.
+- Avoid bare URLs; always use descriptive link text.
+
+## Blockquotes
+- Use `>` for blockquotes.
+- **Do not include blank lines inside blockquotes.**
+- Leave a blank line before and after blockquotes.
+
+## Tables
+- Use pipes (`|`) to separate columns.
+- Align columns with spaces for readability.
+- Always include a header row and separator row.
+
+## Emphasis
+- **Use asterisks (`*`) for emphasis and strong emphasis, not underscores (`_`).**
+- Use `*italic*` for emphasis.
+- Use `**bold**` for strong emphasis.
+- Do not use HTML tags for emphasis.
+
+## Horizontal Rules
+- Use three dashes (`---`) for horizontal rules.
+- Leave a blank line before and after.
+
+## Frontmatter
+- Use YAML frontmatter (`---`) at the top for metadata if needed.
+
+## Configuration
+- Project uses `.markdownlint.json` to configure markdownlint rules.
+- Duplicate headings (MD024) are allowed and configured to be disabled.
+
+## Common markdownlint Rules to Avoid Errors/Warnings
+- MD001: Only one H1 heading per file. All other headings should use `##` or lower.
+- MD002/MD003: Heading levels should increment by one.
+- MD004: Use `-` for unordered list markers.
+- MD007: List indentation should be consistent (2 spaces).
+- MD009: No trailing spaces at end of lines.
+- MD010: No hard tabs (use spaces).
+- MD012: No multiple consecutive blank lines.
+- MD013: Line length (prefer <= 120 chars).
+- MD022: Blank line before headings.
+- MD023: Headings must start at the beginning of the line.
+- MD025: Only one top-level heading per document.
+- MD026: No trailing punctuation in headings.
+- MD028: **No blank lines inside blockquotes.**
+- MD029: Ordered list item prefix should be `1.`
+- MD031: Blank lines before and after fenced code blocks.
+- MD032: Blank line before lists.
+- MD033: Avoid inline HTML.
+- MD034: Use Markdown syntax for links, not raw URLs.
+- MD036: No emphasis used for document titles.
+- MD040: **Fenced code blocks should have a language specified.**
+- MD041: First line in file should be a top-level heading (`#`).
+- MD049: **Use asterisks for emphasis, not underscores.**
+
+## Examples
+
+### Good Heading Structure
+
+```markdown
+# Project Title
+
+## Section
+
+### Subsection
+```
+
+### Good List
+
+```markdown
+- Item 1
+- Item 2
+  - Subitem 1
+  - Subitem 2
+```
+
+### Good Code Block
+
+```markdown
+```typescript
+const foo = "bar";
+```
+```
+
+### Good Link
+
+```markdown
+[Khala Documentation](mdc:docs/README.md)
+```
+
+### Good Image
+
+```markdown
+![Protoss Khala Network](mdc:docs/assets/Khala.webp)
+```
+
+### Good Blockquote (No Blank Lines Inside)
+
+```markdown
+> ![Protoss Khala Network](mdc:docs/assets/Khala.webp)
+> *Illustration: The Khala, the psychic network connecting every Protoss warrior (StarCraft)*
+```
+
+### Bad Blockquote (Blank Line Inside)
+
+```markdown
+> ![Protoss Khala Network](mdc:docs/assets/Khala.webp)
+>
+> *Illustration: The Khala, the psychic network connecting every Protoss warrior (StarCraft)*
+
+
+```

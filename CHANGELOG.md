@@ -2,12 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
+
 - Initial project setup with TypeScript and Bun
 - Comprehensive TypeScript coding conventions
 - Biome configuration for linting and formatting
@@ -15,23 +15,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Community guidelines and contribution workflow
 
 ### Changed
+
 - N/A
 
 ### Deprecated
+
 - N/A
 
 ### Removed
+
 - N/A
 
 ### Fixed
+
 - N/A
 
 ### Security
+
 - N/A
 
 ## [0.1.0] - 2024-01-XX
 
 ### Added
+
 - **Project Foundation**
   - TypeScript project setup with strict configuration
   - Bun runtime and package management
@@ -58,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Modular architecture with clear separation of concerns
 
 ### Technical Details
+
 - **TypeScript Configuration**
   - Strict mode enabled
   - ESNext target and module resolution
@@ -77,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Clear import/export patterns
 
 ### Community
+
 - **Contributing Guidelines**
   - Development workflow documentation
   - Testing requirements and examples
@@ -94,11 +102,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Version History
 
 ### Version 0.1.0 (Current)
+
 - **Status**: Development
 - **Focus**: Project foundation and community setup
 - **Target**: Establish development workflow and conventions
 
 ### Future Versions
+
 - **Version 1.0.0**: Core CLI functionality
 - **Version 2.0.0**: Advanced features and integrations
 - **Version 3.0.0**: Enterprise features and scalability
@@ -106,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Release Process
 
 ### Pre-release Checklist
+
 - [ ] All tests pass
 - [ ] Documentation is updated
 - [ ] Changelog is current
@@ -113,6 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [ ] Performance benchmarks met
 
 ### Release Steps
+
 1. Update version in `package.json`
 2. Update changelog with release date
 3. Create git tag
@@ -121,6 +133,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 6. Announce to community
 
 ### Post-release Tasks
+
 - [ ] Monitor for issues
 - [ ] Update documentation if needed
 - [ ] Plan next release
@@ -139,6 +152,7 @@ When adding entries to the changelog:
 5. **Credit contributors** when appropriate
 
 ### Categories
+
 - **Added**: New features
 - **Changed**: Changes in existing functionality
 - **Deprecated**: Soon-to-be removed features
@@ -147,6 +161,7 @@ When adding entries to the changelog:
 - **Security**: Security-related changes
 
 ### Examples
+
 ```markdown
 ### Added
 - New CLI command `khala search` for semantic search

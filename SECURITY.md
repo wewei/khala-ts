@@ -12,7 +12,8 @@ currently being supported with security updates.
 
 ## Reporting a Vulnerability
 
-We take the security of Khala seriously. If you believe you have found a security vulnerability, please report it to us as described below.
+We take the security of Khala seriously. If you believe you have found a security vulnerability, please report it to us
+as described below.
 
 ### Reporting Process
 
@@ -85,7 +86,7 @@ Security advisories are published:
 - **Release Notes**: For user-facing security information
 - **Blog Posts**: For community announcements
 
-### Contact Information
+## Contact Information
 
 For security-related issues:
 
@@ -93,7 +94,7 @@ For security-related issues:
 - **PGP Key**: [INSERT PGP KEY IF AVAILABLE]
 - **Response Time**: Within 48 hours
 
-### Acknowledgments
+## Acknowledgments
 
 We thank all security researchers who responsibly disclose vulnerabilities to us. Contributors will be acknowledged in:
 
@@ -101,7 +102,7 @@ We thank all security researchers who responsibly disclose vulnerabilities to us
 - Release notes
 - Hall of fame (if applicable)
 
-### Bug Bounty
+## Bug Bounty
 
 Currently, we do not offer a formal bug bounty program, but we do:
 
@@ -109,7 +110,7 @@ Currently, we do not offer a formal bug bounty program, but we do:
 - Provide credit in security advisories
 - Consider special recognition for significant findings
 
-### Security Team
+## Security Team
 
 Our security team consists of:
 
@@ -117,7 +118,7 @@ Our security team consists of:
 - **Core Maintainers**: [INSERT NAMES]
 - **External Advisors**: [INSERT NAMES IF ANY]
 
-### Security Policy Updates
+## Security Policy Updates
 
 This security policy may be updated from time to time. Significant changes will be announced through:
 
@@ -127,4 +128,4 @@ This security policy may be updated from time to time. Significant changes will 
 
 ---
 
-Thank you for helping keep Khala secure! 🔒 
+Thank you for helping keep Khala secure! 🔒

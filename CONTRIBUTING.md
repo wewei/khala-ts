@@ -1,6 +1,7 @@
 # Contributing to Khala
 
-Thank you for your interest in contributing to Khala! This guide will help you get started with the development process.
+Thank you for your interest in contributing to Khala! This guide will help you
+get started with the development process.
 
 ## 🚀 Quick Start
 
@@ -14,17 +15,20 @@ Thank you for your interest in contributing to Khala! This guide will help you g
 ### Setup
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/your-username/khala-ts.git
    cd khala-ts
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
 
 3. **Verify setup**
+
    ```bash
    bun run check
    ```
@@ -38,6 +42,7 @@ git checkout -b feature/your-feature-name
 ```
 
 **Branch naming conventions:**
+
 - `feature/` - New features
 - `fix/` - Bug fixes
 - `docs/` - Documentation updates
@@ -56,7 +61,7 @@ All code must follow the conventions defined in `.cursor/typescript.mdc`:
 
 ### 3. Project Structure
 
-```
+```text
 khala-ts/
 ├── decl/           # Type definitions only
 │   ├── core/       # Core entity types
@@ -89,11 +94,13 @@ khala-ts/
    - Use Bun's built-in test framework
 
 4. **Check code quality**
+
    ```bash
    bun run check:fix
    ```
 
 5. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: add your feature description"
@@ -102,6 +109,7 @@ khala-ts/
 ### 5. Submit a Pull Request
 
 1. **Push your branch**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -132,7 +140,7 @@ bun test --coverage
 
 ### Test Structure
 
-```
+```text
 impl/cli/
 ├── index.ts
 └── cli-test/
@@ -295,6 +303,7 @@ Any other relevant information
 ### Contributors
 
 All contributors will be recognized in:
+
 - README.md contributors section
 - Release notes
 - Project documentation
@@ -340,4 +349,5 @@ All contributors will be recognized in:
 - API implementations
 - Advanced features
 
-Thank you for contributing to Khala! Your help makes this project better for everyone. 🚀 
+Thank you for contributing to Khala! Your help makes this project better for
+everyone. 🚀
