@@ -1,0 +1,29 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Chain of Thought Rules
+
+## Core Principle
+**MVP First, Iterate Fast**
+
+## Planning Process
+1. **What's the smallest working unit?** (15-30 min max)
+2. **Implement it and test immediately**
+3. **Get feedback, make smallest improvement**
+4. **Repeat**
+
+## Red Flags (Stop and Simplify)
+- Planning >2 steps ahead
+- Spending >30 min on one task
+- Writing >50 lines without testing
+- Creating abstractions for simple problems
+
+## Remember
+- Working code > perfect plans
+- Small steps > big plans
+- Test immediately, improve later
+- You can always refactor later
+
+
