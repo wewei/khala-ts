@@ -1,6 +1,6 @@
 ---
 description: 
-globs: 
+globs: *.ts
 alwaysApply: false
 ---
 # TypeScript Coding Conventions (Concise)
@@ -125,6 +125,3 @@ describe("createUser", () => {
 /impl/createUser.ts         # export default createUser
 /impl/createUser-test/      # tests for createUser
 ```
-
-
-
