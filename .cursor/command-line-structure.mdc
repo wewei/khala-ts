@@ -1,0 +1,243 @@
+---
+description: 
+globs: impl/khalaMain/**/*.ts
+alwaysApply: false
+---
+# Khala CLI Command Structure
+
+## Overview
+
+The Khala CLI is organized as a modular command structure where each subcommand is implemented as a separate folder under `/impl/khalaMain/`. This provides better organization, testability, and maintainability.
+
+## Command Structure
+
+```
+khala [options] <command> [command-options]
+```
+
+### Main Commands
+
+| Command | Description | Implementation Path |
+|---------|-------------|-------------------|
+| `add` | Add files or projects to the Khala database | `/impl/khalaMain/add/` |
+| `search` | Search the Khala code database | `/impl/khalaMain/search/` |
+| `inspect` | Inspect code, dependencies, or metadata | `/impl/khalaMain/inspect/` |
+| `bundle` | Generate a bundle from the database | `/impl/khalaMain/bundle/` |
+| `update` | Update bundles or dependencies | `/impl/khalaMain/update/` |
+| `connect` | Connect to a remote Khala instance | `/impl/khalaMain/connect/` |
+| `delete` | Delete code or metadata from the database | `/impl/khalaMain/delete/` |
+
+## Implementation Structure
+
+### Main Entry Point
+- **File**: `/impl/khalaMain/index.ts`
+- **Function**: `khalaMain` (default export)
+- **Purpose**: Sets up the CLI framework and routes to subcommands
+
+### Subcommand Structure
+Each subcommand follows this structure:
+
+```
+/impl/khalaMain/
+├── index.ts              # Main CLI entry point
+├── add/                  # Add command
+│   ├── index.ts          # Command implementation
+│   ├── validateInput.ts  # Input validation
+│   └── processFiles.ts   # File processing logic
+├── search/               # Search command
+│   ├── index.ts          # Command implementation
+│   ├── queryParser.ts    # Query parsing
+│   └── resultFormatter.ts # Result formatting
+├── inspect/              # Inspect command
+│   ├── index.ts          # Command implementation
+│   ├── codeAnalyzer.ts   # Code analysis
+│   └── dependencyGraph.ts # Dependency analysis
+├── bundle/               # Bundle command
+│   ├── index.ts          # Command implementation
+│   ├── dependencyResolver.ts # Dependency resolution
+│   └── treeShaker.ts     # Tree shaking logic
+├── update/               # Update command
+│   ├── index.ts          # Command implementation
+│   ├── versionChecker.ts # Version checking
+│   └── compatibilityChecker.ts # Compatibility analysis
+├── connect/              # Connect command
+│   ├── index.ts          # Command implementation
+│   ├── remoteValidator.ts # Remote validation
+│   └── connectionManager.ts # Connection management
+└── delete/               # Delete command
+    ├── index.ts          # Command implementation
+    ├── safetyChecker.ts  # Safety checks
+    └── cleanupManager.ts # Cleanup operations
+```
+
+## Command Specifications
+
+### `khala add <path>`
+Add files or projects to the Khala database.
+
+**Arguments:**
+- `<path>` - Path to file or directory to add
+
+**Options:**
+- `--recursive, -r` - Recursively add directories
+- `--exclude <pattern>` - Exclude files matching pattern
+- `--force, -f` - Force add even if already exists
+
+**Implementation Notes:**
+- Validates file/directory exists and is readable
+- Extracts TypeScript AST information
+- Generates metadata and fingerprints
+- Stores in database with proper indexing
+
+### `khala search <query>`
+Search the Khala code database.
+
+**Arguments:**
+- `<query>` - Search query (literal or semantic)
+
+**Options:**
+- `--semantic, -s` - Use semantic search instead of literal
+- `--limit <number>` - Limit number of results
+- `--format <format>` - Output format (json, table, tree)
+
+**Implementation Notes:**
+- Supports both literal and semantic search
+- Uses fuzzy matching for literal search
+- Integrates with embedding models for semantic search
+- Provides relevance scoring and ranking
+
+### `khala inspect <target>`
+Inspect code, dependencies, or metadata.
+
+**Arguments:**
+- `<target>` - Target to inspect (file, function, type, dependency)
+
+**Options:**
+- `--dependencies, -d` - Show dependency graph
+- `--metadata, -m` - Show metadata
+- `--usage, -u` - Show usage information
+
+**Implementation Notes:**
+- Analyzes TypeScript AST for detailed information
+- Generates dependency graphs
+- Shows usage patterns and relationships
+- Provides impact analysis for changes
+
+### `khala bundle <output>`
+Generate a bundle from the database.
+
+**Arguments:**
+- `<output>` - Output path for the bundle
+
+**Options:**
+- `--include <pattern>` - Include only matching items
+- `--exclude <pattern>` - Exclude matching items
+- `--format <format>` - Bundle format (esm, cjs, umd)
+
+**Implementation Notes:**
+- Resolves dependencies automatically
+- Performs tree shaking to remove unused code
+- Generates proper package.json
+- Handles TypeScript compilation
+
+### `khala update`
+Update bundles or dependencies.
+
+**Options:**
+- `--bundle <name>` - Update specific bundle
+- `--dependencies` - Update dependencies
+- `--check-only` - Only check for updates
+
+**Implementation Notes:**
+- Checks for newer versions
+- Validates compatibility
+- Updates metadata and fingerprints
+- Regenerates affected bundles
+
+### `khala connect <url>`
+Connect to a remote Khala instance.
+
+**Arguments:**
+- `<url>` - Remote Khala instance URL
+
+**Options:**
+- `--auth <token>` - Authentication token
+- `--sync` - Sync local database with remote
+
+**Implementation Notes:**
+- Validates remote instance
+- Handles authentication
+- Manages connection state
+- Syncs data if requested
+
+### `khala delete <target>`
+Delete code or metadata from the database.
+
+**Arguments:**
+- `<target>` - Target to delete
+
+**Options:**
+- `--force, -f` - Force deletion without confirmation
+- `--recursive, -r` - Recursively delete dependencies
+
+**Implementation Notes:**
+- Performs safety checks
+- Validates no active dependencies
+- Cleans up related metadata
+- Updates affected bundles
+
+## Development Guidelines
+
+### Adding New Commands
+1. Create a new folder under `/impl/khalaMain/`
+2. Implement `index.ts` with the command function
+3. Add subfunctions as needed
+4. Import and register in main `index.ts`
+5. Add tests in corresponding `-test` folder
+
+### Command Function Signature
+```typescript
+type CommandFunction = (program: Command) => void;
+
+const commandName = (program: Command): void => {
+  program
+    .command("commandName")
+    .description("Command description")
+    .argument("<arg>", "Argument description")
+    .option("--option", "Option description")
+    .action((arg, options) => {
+      // Command implementation
+    });
+};
+
+export default commandName;
+```
+
+### Error Handling
+- Use proper error types from `/decl/core/`
+- Provide meaningful error messages
+- Handle both expected and unexpected errors
+- Log errors appropriately
+
+### Testing
+- Each command should have corresponding tests
+- Test both success and error cases
+- Mock external dependencies
+- Test command-line argument parsing
+
+## Future Enhancements
+
+### Planned Features
+- Interactive mode for complex operations
+- Configuration file support
+- Plugin system for custom commands
+- Batch operations for multiple targets
+- Progress indicators for long-running operations
+- Export/import functionality for database backups
+
+### Performance Considerations
+- Lazy loading of command modules
+- Caching of frequently accessed data
+- Parallel processing where possible
+- Memory-efficient processing of large files
+

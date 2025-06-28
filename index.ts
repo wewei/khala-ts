@@ -1,1 +1,3 @@
-console.log("Hello via Bun!");
+import khalaMain from "@i/khalaMain";
+
+khalaMain();
