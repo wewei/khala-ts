@@ -32,7 +32,7 @@ const khalaMain = (): void => {
   // connectCommand(program);
   // deleteCommand(program);
 
-  program.parse();
+  program.parse(process.argv);
 };
 
 export default khalaMain;

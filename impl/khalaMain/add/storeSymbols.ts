@@ -19,6 +19,7 @@ const storeSymbols = (dbPath: string, symbols: SymbolInfo[]): void => {
   db.run("BEGIN TRANSACTION");
   
   try {
+    // First, insert all symbols
     for (const symbol of symbols) {
       // Extract namespace and name from qualified name
       const parts = symbol.qualifiedName.split(".");
@@ -40,16 +41,26 @@ const storeSymbols = (dbPath: string, symbols: SymbolInfo[]): void => {
         symbol.description,
         JSON.stringify(symbol.ast)
       );
-      
-      // Store dependencies
+    }
+    
+    // Then, insert dependencies only for symbols that exist in the database
+    for (const symbol of symbols) {
       for (const dependency of symbol.dependencies) {
-        const depStmt = db.prepare(`
-          INSERT OR IGNORE INTO dependencies 
-          (from_qualified_name, to_qualified_name, dependency_type)
-          VALUES (?, ?, 'reference')
+        // Check if the dependency exists in the symbols table
+        const checkStmt = db.prepare(`
+          SELECT COUNT(*) as count FROM symbols WHERE qualified_name = ?
         `);
+        const result = checkStmt.get(dependency) as { count: number };
         
-        depStmt.run(symbol.qualifiedName, dependency);
+        if (result.count > 0) {
+          const depStmt = db.prepare(`
+            INSERT OR IGNORE INTO dependencies 
+            (from_qualified_name, to_qualified_name, dependency_type)
+            VALUES (?, ?, 'reference')
+          `);
+          
+          depStmt.run(symbol.qualifiedName, dependency);
+        }
       }
     }
     

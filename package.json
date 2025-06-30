@@ -24,6 +24,6 @@
   "dependencies": {
     "commander": "^14.0.0",
     "lancedb": "^0.0.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5"
   }
 }
