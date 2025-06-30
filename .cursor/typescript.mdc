@@ -394,11 +394,12 @@ alwaysApply: false
   - Example: `/impl/createUser.ts`, `/impl/fetchData/index.ts`, `/impl/fetchData/validateInput.ts`
 
 ### Test Organization
-- Each file or subfolder in `/impl` has a corresponding test folder with `-test` prefix
-- Test folder is a sibling to the implementation file/folder
-- Example: `foo.ts` tests go in `foo-test/` folder
-- Example: `bar/` folder tests go in `bar-test/` folder
+- Each file or subfolder in `/impl` has a corresponding test folder with `-test` suffix
+- Test folder is a **sibling** to the implementation file/folder (same level, not nested)
+- Example: `foo.ts` tests go in `foo-test/` folder (sibling to `foo.ts`)
+- Example: `bar/` folder tests go in `bar-test/` folder (sibling to `bar/` folder)
 - Test files should mirror the structure of implementation files
+- Test folder should be at the same directory level as the implementation being tested
 
 ### Import/Export Patterns
 - **Type Imports from `/decl`:**
