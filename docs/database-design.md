@@ -213,11 +213,15 @@ When JSDoc is not available and LLM API is configured:
 "Formats a string using the specified format pattern"
 ```
 
-## Database Schema (MVP)
+## Database Schema (SQLite)
 
 ### Symbols Table
 
 ```sql
+-- Enable foreign key constraints
+PRAGMA foreign_keys = ON;
+
+-- Symbols table with SQLite optimizations
 CREATE TABLE symbols (
   qualified_name TEXT PRIMARY KEY,
   namespace TEXT NOT NULL,       -- Derived from qualified_name for faster queries (empty string for root)
@@ -225,9 +229,16 @@ CREATE TABLE symbols (
   kind TEXT NOT NULL,            -- For faster search (FunctionDeclaration, ClassDeclaration, etc.)
   description TEXT NOT NULL,
   ast TEXT NOT NULL,             -- JSON serialized TypeScript AST
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT (datetime('now')),
+  updated_at DATETIME DEFAULT (datetime('now'))
 );
+
+-- Indexes for common query patterns
+CREATE INDEX idx_symbols_namespace ON symbols(namespace);
+CREATE INDEX idx_symbols_name ON symbols(name);
+CREATE INDEX idx_symbols_kind ON symbols(kind);
+CREATE INDEX idx_symbols_namespace_kind ON symbols(namespace, kind);
+CREATE INDEX idx_symbols_created_at ON symbols(created_at);
 ```
 
 ### Dependencies Table
@@ -238,10 +249,16 @@ CREATE TABLE dependencies (
   to_qualified_name TEXT NOT NULL,
   dependency_type TEXT DEFAULT 'reference',
   context TEXT,
+  created_at DATETIME DEFAULT (datetime('now')),
   PRIMARY KEY (from_qualified_name, to_qualified_name),
-  FOREIGN KEY (from_qualified_name) REFERENCES symbols(qualified_name),
-  FOREIGN KEY (to_qualified_name) REFERENCES symbols(qualified_name)
+  FOREIGN KEY (from_qualified_name) REFERENCES symbols(qualified_name) ON DELETE CASCADE,
+  FOREIGN KEY (to_qualified_name) REFERENCES symbols(qualified_name) ON DELETE CASCADE
 );
+
+-- Indexes for dependency queries
+CREATE INDEX idx_dependencies_from ON dependencies(from_qualified_name);
+CREATE INDEX idx_dependencies_to ON dependencies(to_qualified_name);
+CREATE INDEX idx_dependencies_type ON dependencies(dependency_type);
 ```
 
 ### Namespaces Table
@@ -251,76 +268,60 @@ CREATE TABLE namespaces (
   name TEXT PRIMARY KEY,
   description TEXT,
   parent_namespace TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT (datetime('now')),
+  FOREIGN KEY (parent_namespace) REFERENCES namespaces(name) ON DELETE CASCADE
 );
+
+-- Index for parent namespace lookups
+CREATE INDEX idx_namespaces_parent ON namespaces(parent_namespace);
 ```
 
-## Implementation Strategy
+### Triggers for Data Integrity
 
-### Phase 1: Basic Symbol Extraction (MVP)
+```sql
+-- Update the updated_at timestamp when a symbol is modified
+CREATE TRIGGER update_symbols_updated_at 
+  AFTER UPDATE ON symbols
+  FOR EACH ROW
+BEGIN
+  UPDATE symbols SET updated_at = datetime('now') WHERE qualified_name = NEW.qualified_name;
+END;
 
-- Extract functions and types from TypeScript files
-- Generate unique IDs for each symbol
-- Use TypeScript namespaces or default to "global"
-- Basic dependency tracking
+-- Ensure namespace and name are derived from qualified_name
+CREATE TRIGGER validate_symbol_qualified_name
+  BEFORE INSERT ON symbols
+  FOR EACH ROW
+BEGIN
+  SELECT CASE 
+    WHEN NEW.qualified_name IS NULL OR NEW.qualified_name = '' 
+    THEN RAISE(ABORT, 'qualified_name cannot be null or empty')
+  END;
+END;
+```
 
-### Phase 2: Advanced Features
+### Common Queries
 
-- Comprehensive dependency analysis
-- JSDoc extraction
-- LLM integration for descriptions
-- Namespace management tools
+```sql
+-- Find all functions in a specific namespace
+SELECT * FROM symbols 
+WHERE namespace = 'Utils' AND kind = 'FunctionDeclaration';
 
-### Phase 3: Optimization
+-- Find all symbols that depend on a specific symbol
+SELECT s.* FROM symbols s
+JOIN dependencies d ON s.qualified_name = d.from_qualified_name
+WHERE d.to_qualified_name = 'Utils.formatString';
 
-- Efficient symbol lookup
-- Dependency graph optimization
-- Semantic search integration
-- Performance monitoring
+-- Find all symbols that a specific symbol depends on
+SELECT s.* FROM symbols s
+JOIN dependencies d ON s.qualified_name = d.to_qualified_name
+WHERE d.from_qualified_name = 'Utils.formatString';
 
-## Benefits
+-- Find root-level symbols (no namespace)
+SELECT * FROM symbols WHERE namespace = '';
 
-### Flexibility
-
-- Symbols can move between files without losing history
-- Dependencies tracked at symbol level, not file level
-- Easy to find all usages of a specific function/type
-
-### Efficiency
-
-- No redundant storage of file content
-- Precise dependency graphs
-- Better search and indexing
-
-### Maintainability
-
-- Changes to one symbol don't affect others
-- Easier to track symbol evolution
-- Better support for refactoring tools
-
-### Semantic Understanding
-
-- Rich descriptions for AI-powered search
-- Comprehensive dependency analysis
-- Better code understanding and documentation
-
-## Future Considerations
-
-### Symbol Evolution
-
-- Track symbol changes over time
-- Version history for symbols
-- Migration paths for symbol changes
-
-### Cross-Project Dependencies
-
-- Handle external dependencies
-- Package-level symbol organization
-- Version compatibility tracking
-
-### Advanced Analysis
-
-- Code complexity metrics
-- Usage pattern analysis
-- Refactoring suggestions
-- Impact analysis for changes
+-- Find all namespaces and their symbol counts
+SELECT namespace, COUNT(*) as symbol_count 
+FROM symbols 
+GROUP BY namespace 
+ORDER BY symbol_count DESC;
+```
