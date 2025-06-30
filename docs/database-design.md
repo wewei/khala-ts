@@ -31,18 +31,15 @@ files, have dependencies on each other, and exist independently.
 
 ## Symbol Structure
 
-### Base Symbol
+### Symbol Type
 
 ```typescript
-type BaseSymbol = {
-  qualifiedName: string;         // namespace.name (e.g., "Utils.formatString")
-  description: string;           // For semantic indexing
-  content: string;               // Full symbol content
+type Symbol = {
+  qualifiedName: string;         // Primary key - namespace.name (e.g., "Utils.formatString")
+  description: string;           // Purpose/description for semantic indexing
+  ast: ts.Node;                  // TypeScript AST node - contains all symbol details
   dependencies: string[];        // Qualified names of symbols this depends on
   dependents: string[];          // Qualified names of symbols that depend on this
-  fingerprints: {
-    content: string;             // Content hash
-  };
   createdAt: Date;
   updatedAt: Date;
 };
@@ -52,146 +49,22 @@ const getName = (qualifiedName: string): string =>
   qualifiedName.split('.').pop() || qualifiedName;
 
 const getNamespace = (qualifiedName: string): string => 
-  qualifiedName.includes('.') ? qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) : 'global';
+  qualifiedName.includes('.') ? qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) : '';
 ```
 
-### Declaration Symbols (Are Types Themselves)
+### Why Single Symbol Type?
 
-#### Type Symbol
+The AST already contains all the information we need:
+- **Kind**: Available via `ast.kind` (FunctionDeclaration, ClassDeclaration, etc.)
+- **Properties**: Available by traversing the AST
+- **Types**: Available in the AST structure
+- **Structure**: The AST preserves all syntactic and semantic relationships
 
-```typescript
-type TypeSymbol = BaseSymbol & {
-  kind: "type";
-  typeDefinition: string;        // Type definition
-  isUnion: boolean;              // Whether it's a union type
-  isGeneric: boolean;            // Whether it has type parameters
-  typeParameters?: string[];     // Generic type parameters
-  // No type field - the symbol itself is the type
-};
-```
-
-#### Interface Symbol
-
-```typescript
-type InterfaceSymbol = BaseSymbol & {
-  kind: "interface";
-  properties: Array<{
-    name: string;
-    type: string;
-    optional: boolean;
-    readonly: boolean;
-  }>;
-  extends?: string[];            // Extended interfaces
-  isGeneric: boolean;
-  typeParameters?: string[];
-  // No type field - the symbol itself is the type
-};
-```
-
-#### Class Symbol
-
-```typescript
-type ClassSymbol = BaseSymbol & {
-  kind: "class";
-  properties: Array<{
-    name: string;
-    type: string;
-    access: "public" | "private" | "protected";
-    static: boolean;
-  }>;
-  methods: Array<{
-    name: string;
-    type: string;                // Method type
-    access: "public" | "private" | "protected";
-    static: boolean;
-  }>;
-  extends?: string;              // Parent class
-  implements?: string[];         // Implemented interfaces
-  isGeneric: boolean;
-  typeParameters?: string[];
-  // No type field - the symbol itself is the type
-};
-```
-
-#### Enum Symbol
-
-```typescript
-type EnumSymbol = BaseSymbol & {
-  kind: "enum";
-  members: Array<{
-    name: string;
-    value?: string | number;     // Explicit value if provided
-  }>;
-  isConst: boolean;              // Whether it's a const enum
-  // No type field - the symbol itself is the type
-};
-```
-
-### Implementation Symbols (Have Types)
-
-#### Function Symbol
-
-```typescript
-type FunctionSymbol = BaseSymbol & {
-  kind: "function";
-  type: string;                  // Function type (e.g., "(str: string): string")
-  parameters: Array<{
-    name: string;
-    type: string;
-    optional: boolean;
-  }>;
-  returnType: string;
-  fingerprints: {
-    content: string;
-    type: string;                // Type hash
-  };
-};
-```
-
-#### Variable Symbol
-
-```typescript
-type VariableSymbol = BaseSymbol & {
-  kind: "variable";
-  type: string;                  // Variable type (e.g., "string")
-  isConst: boolean;              // Whether it's const
-  isLet: boolean;                // Whether it's let
-  fingerprints: {
-    content: string;
-    type: string;                // Type hash
-  };
-};
-```
-
-#### Constant Symbol
-
-```typescript
-type ConstantSymbol = BaseSymbol & {
-  kind: "constant";
-  type: string;                  // Constant type (e.g., "string")
-  value?: string;                // Literal value if available
-  fingerprints: {
-    content: string;
-    type: string;                // Type hash
-  };
-};
-```
-
-### Union Type
-
-```typescript
-type Symbol = 
-  | TypeSymbol 
-  | InterfaceSymbol 
-  | ClassSymbol 
-  | EnumSymbol
-  | FunctionSymbol 
-  | VariableSymbol 
-  | ConstantSymbol;
-
-type DeclarationSymbol = TypeSymbol | InterfaceSymbol | ClassSymbol | EnumSymbol;
-type ImplementationSymbol = FunctionSymbol | VariableSymbol | ConstantSymbol;
-```
+This approach is:
+- **Simpler**: One type instead of many specialized types
+- **More flexible**: AST can represent any TypeScript construct
+- **More accurate**: AST is the authoritative source of truth
+- **Easier to maintain**: No need to keep multiple type definitions in sync
 
 ## Namespace Strategy
 
@@ -327,12 +200,11 @@ When JSDoc is not available and LLM API is configured:
 ```sql
 CREATE TABLE symbols (
   qualified_name TEXT PRIMARY KEY,
-  kind TEXT NOT NULL,
+  namespace TEXT NOT NULL,       -- Derived from qualified_name for faster queries (empty string for root)
+  name TEXT NOT NULL,            -- Derived from qualified_name for faster queries
+  kind TEXT NOT NULL,            -- For faster search (FunctionDeclaration, ClassDeclaration, etc.)
   description TEXT NOT NULL,
-  content TEXT NOT NULL,
-  type TEXT,                     -- NULL for declaration symbols
-  content_hash TEXT NOT NULL,
-  type_hash TEXT,                -- NULL for declaration symbols
+  ast TEXT NOT NULL,             -- JSON serialized TypeScript AST
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
