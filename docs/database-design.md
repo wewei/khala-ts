@@ -35,41 +35,27 @@ files, have dependencies on each other, and exist independently.
 
 ```typescript
 type BaseSymbol = {
-  id: string;                    // Unique identifier
-  name: string;                  // Symbol name
-  namespace: string;             // Module-based namespace
+  qualifiedName: string;         // namespace.name (e.g., "Utils.formatString")
   description: string;           // For semantic indexing
   content: string;               // Full symbol content
-  dependencies: string[];        // IDs of symbols this depends on
-  dependents: string[];          // IDs of symbols that depend on this
+  dependencies: string[];        // Qualified names of symbols this depends on
+  dependents: string[];          // Qualified names of symbols that depend on this
   fingerprints: {
     content: string;             // Content hash
   };
   createdAt: Date;
   updatedAt: Date;
 };
+
+// Helper functions to extract name and namespace
+const getName = (qualifiedName: string): string => 
+  qualifiedName.split('.').pop() || qualifiedName;
+
+const getNamespace = (qualifiedName: string): string => 
+  qualifiedName.includes('.') ? qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) : 'global';
 ```
 
-### Symbol Types
-
-#### Function Symbol
-
-```typescript
-type FunctionSymbol = BaseSymbol & {
-  kind: "function";
-  signature: string;             // Function signature
-  parameters: Array<{
-    name: string;
-    type: string;
-    optional: boolean;
-  }>;
-  returnType: string;
-  fingerprints: {
-    content: string;
-    signature: string;           // Signature hash
-  };
-};
-```
+### Declaration Symbols (Are Types Themselves)
 
 #### Type Symbol
 
@@ -80,6 +66,7 @@ type TypeSymbol = BaseSymbol & {
   isUnion: boolean;              // Whether it's a union type
   isGeneric: boolean;            // Whether it has type parameters
   typeParameters?: string[];     // Generic type parameters
+  // No type field - the symbol itself is the type
 };
 ```
 
@@ -97,6 +84,7 @@ type InterfaceSymbol = BaseSymbol & {
   extends?: string[];            // Extended interfaces
   isGeneric: boolean;
   typeParameters?: string[];
+  // No type field - the symbol itself is the type
 };
 ```
 
@@ -113,7 +101,7 @@ type ClassSymbol = BaseSymbol & {
   }>;
   methods: Array<{
     name: string;
-    signature: string;
+    type: string;                // Method type
     access: "public" | "private" | "protected";
     static: boolean;
   }>;
@@ -121,6 +109,42 @@ type ClassSymbol = BaseSymbol & {
   implements?: string[];         // Implemented interfaces
   isGeneric: boolean;
   typeParameters?: string[];
+  // No type field - the symbol itself is the type
+};
+```
+
+#### Enum Symbol
+
+```typescript
+type EnumSymbol = BaseSymbol & {
+  kind: "enum";
+  members: Array<{
+    name: string;
+    value?: string | number;     // Explicit value if provided
+  }>;
+  isConst: boolean;              // Whether it's a const enum
+  // No type field - the symbol itself is the type
+};
+```
+
+### Implementation Symbols (Have Types)
+
+#### Function Symbol
+
+```typescript
+type FunctionSymbol = BaseSymbol & {
+  kind: "function";
+  type: string;                  // Function type (e.g., "(str: string): string")
+  parameters: Array<{
+    name: string;
+    type: string;
+    optional: boolean;
+  }>;
+  returnType: string;
+  fingerprints: {
+    content: string;
+    type: string;                // Type hash
+  };
 };
 ```
 
@@ -129,10 +153,44 @@ type ClassSymbol = BaseSymbol & {
 ```typescript
 type VariableSymbol = BaseSymbol & {
   kind: "variable";
-  type: string;                  // Variable type
+  type: string;                  // Variable type (e.g., "string")
   isConst: boolean;              // Whether it's const
   isLet: boolean;                // Whether it's let
+  fingerprints: {
+    content: string;
+    type: string;                // Type hash
+  };
 };
+```
+
+#### Constant Symbol
+
+```typescript
+type ConstantSymbol = BaseSymbol & {
+  kind: "constant";
+  type: string;                  // Constant type (e.g., "string")
+  value?: string;                // Literal value if available
+  fingerprints: {
+    content: string;
+    type: string;                // Type hash
+  };
+};
+```
+
+### Union Type
+
+```typescript
+type Symbol = 
+  | TypeSymbol 
+  | InterfaceSymbol 
+  | ClassSymbol 
+  | EnumSymbol
+  | FunctionSymbol 
+  | VariableSymbol 
+  | ConstantSymbol;
+
+type DeclarationSymbol = TypeSymbol | InterfaceSymbol | ClassSymbol | EnumSymbol;
+type ImplementationSymbol = FunctionSymbol | VariableSymbol | ConstantSymbol;
 ```
 
 ## Namespace Strategy
@@ -150,15 +208,15 @@ namespace Utils {
 
 // In Khala database:
 {
-  name: "formatString",
-  namespace: "Utils",
-  kind: "function"
+  qualifiedName: "Utils.formatString",
+  kind: "function",
+  type: "(str: string): string"
 }
 
 {
-  name: "StringFormat", 
-  namespace: "Utils",
+  qualifiedName: "Utils.StringFormat", 
   kind: "type"
+  // No type field - this symbol IS the type
 }
 ```
 
@@ -168,9 +226,9 @@ For files without explicit namespaces:
 
 ```typescript
 {
-  name: "formatString",
-  namespace: "global",
-  kind: "function"
+  qualifiedName: "global.formatString",
+  kind: "function",
+  type: "(str: string): string"
 }
 ```
 
@@ -185,9 +243,9 @@ namespace Utils.String {
 
 // In database:
 {
-  name: "format",
-  namespace: "Utils.String",
-  kind: "function"
+  qualifiedName: "Utils.String.format",
+  kind: "function",
+  type: "(): void"
 }
 ```
 
@@ -216,12 +274,12 @@ function processUser(user: User, options: ProcessOptions): Result {
   return validator.validate(user);
 }
 
-// Dependencies:
-// - User (type reference)
-// - ProcessOptions (type reference) 
-// - Result (type reference)
-// - createValidator (function call)
-// - validator.validate (method call)
+// Dependencies (using qualified names):
+// - "types.User" (type reference)
+// - "types.ProcessOptions" (type reference) 
+// - "types.Result" (type reference)
+// - "utils.createValidator" (function call)
+// - "utils.Validator.validate" (method call)
 ```
 
 ## Description Generation
@@ -255,7 +313,7 @@ When JSDoc is not available and LLM API is configured:
 // Input to LLM:
 // Symbol: formatString
 // Kind: function
-// Signature: (str: string, format: string): string
+// Type: (str: string, format: string): string
 // Content: function formatString(str: string, format: string): string { ... }
 
 // Generated description:
@@ -268,16 +326,13 @@ When JSDoc is not available and LLM API is configured:
 
 ```sql
 CREATE TABLE symbols (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
+  qualified_name TEXT PRIMARY KEY,
   kind TEXT NOT NULL,
-  namespace TEXT NOT NULL,
   description TEXT NOT NULL,
   content TEXT NOT NULL,
-  signature TEXT,
-  type_definition TEXT,
+  type TEXT,                     -- NULL for declaration symbols
   content_hash TEXT NOT NULL,
-  signature_hash TEXT,
+  type_hash TEXT,                -- NULL for declaration symbols
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -287,13 +342,13 @@ CREATE TABLE symbols (
 
 ```sql
 CREATE TABLE dependencies (
-  from_id TEXT NOT NULL,
-  to_id TEXT NOT NULL,
+  from_qualified_name TEXT NOT NULL,
+  to_qualified_name TEXT NOT NULL,
   dependency_type TEXT DEFAULT 'reference',
   context TEXT,
-  PRIMARY KEY (from_id, to_id),
-  FOREIGN KEY (from_id) REFERENCES symbols(id),
-  FOREIGN KEY (to_id) REFERENCES symbols(id)
+  PRIMARY KEY (from_qualified_name, to_qualified_name),
+  FOREIGN KEY (from_qualified_name) REFERENCES symbols(qualified_name),
+  FOREIGN KEY (to_qualified_name) REFERENCES symbols(qualified_name)
 );
 ```
 
