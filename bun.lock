@@ -5,6 +5,7 @@
       "name": "khala-ts",
       "dependencies": {
         "commander": "^14.0.0",
+        "lancedb": "^0.0.1",
       },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
@@ -41,6 +42,8 @@
     "bun-types": ["bun-types@1.2.17", "", { "dependencies": { "@types/node": "*" } }, "sha512-ElC7ItwT3SCQwYZDYoAH+q6KT4Fxjl8DtZ6qDulUFBmXA8YB4xo+l54J9ZJN+k2pphfn9vk7kfubeSd5QfTVJQ=="],
 
     "commander": ["commander@14.0.0", "", {}, "sha512-2uM9rYjPvyq39NwLRqaiLtWHyDC1FvryJDa2ATTVims5YAS4PupsEQsDvP14FqhFr0P49CYDugi59xaxJlTXRA=="],
+
+    "lancedb": ["lancedb@0.0.1", "", {}, "sha512-zQ37KLaJGCYKoILGoNsSqctH303Pl9iAs+fmcO6hQE8pYrjhX+v9Iwt8R2ZRU9kEt9YFlXqt0lfJaqwBlZd0NA=="],
 
     "typescript": ["typescript@5.8.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ=="],
 
