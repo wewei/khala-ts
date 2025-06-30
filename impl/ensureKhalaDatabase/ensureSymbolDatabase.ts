@@ -68,28 +68,26 @@ const createTriggers = (db: Database): void => {
 const ensureSymbolDatabase = (config: KhalaDatabaseConfig): DatabaseInitResult => {
   try {
     // Check if database already exists
-    const dbExists = existsSync(config.sqlitePath);
-    
+    if (existsSync(config.sqlitePath)) {
+      return {
+        success: true,
+        sqlitePath: config.sqlitePath,
+      };
+    }
     // Create or open database
     const db = new Database(config.sqlitePath);
-    
     // Enable foreign keys
     db.run("PRAGMA foreign_keys = ON");
-    
     // Create tables
     createSymbolsTable(db);
     createDependenciesTable(db);
     createNamespacesTable(db);
-    
     // Create indexes
     createIndexes(db);
-    
     // Create triggers
     createTriggers(db);
-    
     // Close database connection
     db.close();
-    
     return {
       success: true,
       sqlitePath: config.sqlitePath,

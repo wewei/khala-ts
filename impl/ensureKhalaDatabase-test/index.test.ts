@@ -1,20 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { join } from "node:path";
-import { rmSync } from "node:fs";
+import { rmSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { Database } from "bun:sqlite";
-import ensureKhalaDatabase from "../index";
+import ensureKhalaDatabase from "../ensureKhalaDatabase";
 import type { DatabaseInitResult } from "@d/database/khala";
 
 describe("ensureKhalaDatabase", () => {
-  const testFolder = join(process.cwd(), "test-khala-db");
+  let testFolder: string;
   
   beforeAll(() => {
-    // Clean up any existing test folder
-    try {
-      rmSync(testFolder, { recursive: true, force: true });
-    } catch {
-      // Ignore if folder doesn't exist
-    }
+    // Create a temporary directory that will be automatically cleaned up
+    testFolder = mkdtempSync(join(tmpdir(), "khala-test-"));
   });
   
   afterAll(() => {
