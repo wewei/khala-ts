@@ -7,10 +7,12 @@ import parseTypeScriptFile from "../add/parseTypeScriptFile";
 describe("TypeScript parsing", () => {
   let testFolder: string;
   let testFile: string;
+  let tsConfigPath: string;
   
   beforeAll(() => {
     testFolder = mkdtempSync(join(tmpdir(), "khala-parse-test-"));
     testFile = join(testFolder, "test.ts");
+    tsConfigPath = join(testFolder, "tsconfig.json");
     
     const testContent = `
 export function hello(name: string): string {
@@ -38,6 +40,24 @@ export class UserService {
 }
 `;
     writeFileSync(testFile, testContent);
+    
+    // Create a tsconfig.json file
+    const tsConfigContent = {
+      compilerOptions: {
+        target: "ES2020",
+        module: "ESNext",
+        moduleResolution: "node",
+        allowSyntheticDefaultImports: true,
+        esModuleInterop: true,
+        skipLibCheck: true,
+        strict: true,
+        noImplicitAny: true,
+        strictNullChecks: true,
+      },
+      include: ["**/*.ts", "**/*.tsx"],
+      exclude: ["node_modules"],
+    };
+    writeFileSync(tsConfigPath, JSON.stringify(tsConfigContent, null, 2));
   });
   
   afterAll(() => {
@@ -48,8 +68,8 @@ export class UserService {
     }
   });
   
-  it("should parse TypeScript file and extract symbols", () => {
-    const symbols = parseTypeScriptFile(testFile, join(testFolder, "tsconfig.json"));
+  it("should parse TypeScript file and extract symbols using tsconfig.json", () => {
+    const symbols = parseTypeScriptFile(testFile, tsConfigPath);
     
     expect(symbols).toBeDefined();
     expect(Array.isArray(symbols)).toBe(true);
@@ -75,5 +95,14 @@ export class UserService {
     
     const serviceSymbol = symbols.find(s => s.qualifiedName === "UserService");
     expect(serviceSymbol?.kind).toBe("ClassDeclaration");
+  });
+  
+  it("should handle missing tsconfig.json gracefully", () => {
+    const nonExistentTsConfig = join(testFolder, "nonexistent-tsconfig.json");
+    const symbols = parseTypeScriptFile(testFile, nonExistentTsConfig);
+    
+    expect(symbols).toBeDefined();
+    expect(Array.isArray(symbols)).toBe(true);
+    expect(symbols.length).toBeGreaterThan(0);
   });
 }); 

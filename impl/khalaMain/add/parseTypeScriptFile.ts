@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import * as ts from "typescript";
 
@@ -152,17 +152,39 @@ const extractDependencies = (node: ts.Node, sourceFile: ts.SourceFile): string[]
 
 const parseTypeScriptFile = (filePath: string, tsConfigPath: string): SymbolInfo[] => {
   const resolvedPath = resolve(filePath);
-  const sourceCode = readFileSync(resolvedPath, "utf-8");
+  const resolvedTsConfigPath = resolve(tsConfigPath);
   
-  // Create a program with the source file
-  const program = ts.createProgram([resolvedPath], {
+  // Check if tsconfig.json exists and parse it
+  let compilerOptions: ts.CompilerOptions = {
     target: ts.ScriptTarget.ES2020,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.NodeJs,
     allowSyntheticDefaultImports: true,
     esModuleInterop: true,
     skipLibCheck: true,
-  });
+  };
+  
+  if (existsSync(resolvedTsConfigPath)) {
+    try {
+      const tsConfigContent = readFileSync(resolvedTsConfigPath, "utf-8");
+      const tsConfig = ts.parseConfigFileTextToJson(resolvedTsConfigPath, tsConfigContent);
+      
+      if (tsConfig.config) {
+        const parsedConfig = ts.parseJsonConfigFileContent(
+          tsConfig.config,
+          ts.sys,
+          resolve(tsConfigPath, ".."),
+          compilerOptions
+        );
+        compilerOptions = { ...compilerOptions, ...parsedConfig.options };
+      }
+    } catch (error) {
+      console.warn(`Warning: Could not parse tsconfig.json at ${resolvedTsConfigPath}, using defaults`);
+    }
+  }
+  
+  // Create a program with the source file and parsed compiler options
+  const program = ts.createProgram([resolvedPath], compilerOptions);
   
   const sourceFile = program.getSourceFile(resolvedPath);
   if (!sourceFile) {
