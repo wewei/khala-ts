@@ -82,14 +82,24 @@ namespace Utils {
 // In Khala database:
 {
   qualifiedName: "Utils.formatString",
-  kind: "function",
-  type: "(str: string): string"
+  namespace: "Utils",
+  name: "formatString",
+  kind: "FunctionDeclaration",
+  description: "Formats a string according to the specified format pattern",
+  ast: /* TypeScript AST node */,
+  dependencies: [],
+  dependents: []
 }
 
 {
   qualifiedName: "Utils.StringFormat", 
-  kind: "type"
-  // No type field - this symbol IS the type
+  namespace: "Utils",
+  name: "StringFormat",
+  kind: "TypeAliasDeclaration",
+  description: "String format options",
+  ast: /* TypeScript AST node */,
+  dependencies: [],
+  dependents: []
 }
 ```
 
@@ -99,9 +109,14 @@ For files without explicit namespaces:
 
 ```typescript
 {
-  qualifiedName: "global.formatString",
-  kind: "function",
-  type: "(str: string): string"
+  qualifiedName: "formatString",
+  namespace: "",
+  name: "formatString",
+  kind: "FunctionDeclaration",
+  description: "Formats a string according to the specified format pattern",
+  ast: /* TypeScript AST node */,
+  dependencies: [],
+  dependents: []
 }
 ```
 
@@ -117,8 +132,13 @@ namespace Utils.String {
 // In database:
 {
   qualifiedName: "Utils.String.format",
-  kind: "function",
-  type: "(): void"
+  namespace: "Utils.String",
+  name: "format",
+  kind: "FunctionDeclaration",
+  description: "Formats a string",
+  ast: /* TypeScript AST node */,
+  dependencies: [],
+  dependents: []
 }
 ```
 
@@ -148,11 +168,11 @@ function processUser(user: User, options: ProcessOptions): Result {
 }
 
 // Dependencies (using qualified names):
-// - "types.User" (type reference)
-// - "types.ProcessOptions" (type reference) 
-// - "types.Result" (type reference)
-// - "utils.createValidator" (function call)
-// - "utils.Validator.validate" (method call)
+// - "User" (type reference - root namespace)
+// - "ProcessOptions" (type reference - root namespace) 
+// - "Result" (type reference - root namespace)
+// - "Utils.createValidator" (function call)
+// - "Utils.Validator.validate" (method call)
 ```
 
 ## Description Generation
