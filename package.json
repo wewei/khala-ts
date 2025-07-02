@@ -22,6 +22,7 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@typescript/vfs": "^1.6.1",
     "commander": "^14.0.0",
     "lancedb": "^0.0.1",
     "typescript": "^5"
