@@ -1,5 +1,8 @@
 import type { SourceFile, CompilerOptions, System } from "typescript";
 import { createVirtualTypeScriptEnvironment } from "@typescript/vfs";
+import type { Result } from "@d/common/result";
+import success from "@i/success";
+import fail from "@i/fail";
 
 type ParseTypeScriptProgramOptions = {
   /** Virtual file system containing the TypeScript files */
@@ -8,15 +11,6 @@ type ParseTypeScriptProgramOptions = {
   filePath: string;
   /** Compiler options for TypeScript parsing */
   compilerOptions?: CompilerOptions;
-};
-
-type ParseTypeScriptProgramResult = {
-  /** Success status */
-  success: boolean;
-  /** The parsed TypeScript source file node */
-  sourceFile?: SourceFile;
-  /** Error message if parsing failed */
-  error?: string;
 };
 
 /**
@@ -28,7 +22,7 @@ type ParseTypeScriptProgramResult = {
  * @param options - Configuration options for parsing
  * @returns Parse result containing the source file node or error information
  */
-const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): ParseTypeScriptProgramResult => {
+const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): Result<SourceFile> => {
   const { vfs, filePath, compilerOptions = {} } = options;
   
   try {
@@ -61,24 +55,15 @@ const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): ParseTy
       // Collect diagnostics for more informative error messages
       const diagnostics = env.languageService.getProgram()?.getSyntacticDiagnostics() || [];
       const errorMessages = diagnostics.map(d => d.messageText).join("\n");
-      return {
-        success: false,
-        error: `Could not parse source file: ${filePath}` + (errorMessages ? `\n${errorMessages}` : ""),
-      };
+      return fail(`Could not parse source file: ${filePath}${errorMessages ? `\n${errorMessages}` : ""}`);
     }
     
-    return {
-      success: true,
-      sourceFile,
-    };
+    return success(sourceFile);
     
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return fail(error instanceof Error ? error.message : String(error));
   }
 };
 
 export default parseTypeScriptProgram;
-export type { ParseTypeScriptProgramOptions, ParseTypeScriptProgramResult }; 
+export type { ParseTypeScriptProgramOptions }; 

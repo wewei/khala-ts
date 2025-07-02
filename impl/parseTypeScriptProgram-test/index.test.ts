@@ -1,6 +1,8 @@
 import { describe, it, expect } from "bun:test";
 import parseTypeScriptProgram from "../parseTypeScriptProgram";
 import { createSystem, createDefaultMapFromNodeModules } from "@typescript/vfs";
+import isSuccess from "@i/isSuccess";
+import isError from "@i/isError";
 
 // Helper function to create a VFS with TypeScript standard library files
 const createVFSWithLib = (files: Map<string, string>) => {
@@ -50,14 +52,13 @@ describe("parseTypeScriptFileV2", () => {
       filePath: "/test.ts",
     });
     
-    expect(result.success).toBe(true);
-    expect(result.sourceFile).toBeDefined();
-    expect(result.error).toBeUndefined();
-    
-    if (result.sourceFile) {
+    expect(isSuccess(result)).toBe(true);
+    if (isSuccess(result)) {
+      expect(result.value).toBeDefined();
+      
       // Check that we have the expected nodes
       const nodes: string[] = [];
-      result.sourceFile.forEachChild((node) => {
+      result.value.forEachChild((node) => {
         nodes.push(node.kind.toString());
       });
       
@@ -74,11 +75,11 @@ describe("parseTypeScriptFileV2", () => {
       filePath: "/nonexistent.ts",
     });
     
-    expect(result.success).toBe(false);
-    expect(result.sourceFile).toBeUndefined();
-    expect(result.error).toBeDefined();
-    // The error should contain information about the missing file
-    expect(result.error).toContain("/nonexistent.ts");
+    expect(isError(result)).toBe(true);
+    if (isError(result)) {
+      // The error should contain information about the missing file
+      expect(result.error).toContain("/nonexistent.ts");
+    }
   });
   
   it("should handle invalid TypeScript syntax", () => {
@@ -98,8 +99,10 @@ describe("parseTypeScriptFileV2", () => {
     });
     
     // Should still succeed as TypeScript parser is lenient
-    expect(result.success).toBe(true);
-    expect(result.sourceFile).toBeDefined();
+    expect(isSuccess(result)).toBe(true);
+    if (isSuccess(result)) {
+      expect(result.value).toBeDefined();
+    }
   });
   
   it("should work with custom compiler options", () => {
@@ -120,7 +123,9 @@ describe("parseTypeScriptFileV2", () => {
       },
     });
     
-    expect(result.success).toBe(true);
-    expect(result.sourceFile).toBeDefined();
+    expect(isSuccess(result)).toBe(true);
+    if (isSuccess(result)) {
+      expect(result.value).toBeDefined();
+    }
   });
 }); 
