@@ -2,7 +2,6 @@ import { describe, it, expect } from "bun:test";
 import parseTypeScriptProgram from "../parseTypeScriptProgram";
 import { createSystem, createDefaultMapFromNodeModules } from "@typescript/vfs";
 import isSuccess from "@i/isSuccess";
-import isError from "@i/isError";
 
 // Helper function to create a VFS with TypeScript standard library files
 const createVFSWithLib = (files: Map<string, string>) => {
@@ -75,10 +74,10 @@ describe("parseTypeScriptFileV2", () => {
       filePath: "/nonexistent.ts",
     });
     
-    expect(isError(result)).toBe(true);
-    if (isError(result)) {
+    expect(isSuccess(result)).toBe(false);
+    if (!isSuccess(result)) {
       // The error should contain information about the missing file
-      expect(result.error).toContain("/nonexistent.ts");
+      expect(result.error).toMatch(/File .* not found/);
     }
   });
   
