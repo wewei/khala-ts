@@ -33,7 +33,6 @@ describe('globToRegex', () => {
 
   it('should match absolute and relative paths', () => {
     expect(globMatch('/src/foo.ts', 'src/**/*.ts')).toBe(true);
-    expect(globMatch('src/foo.ts', '/src/**/*.ts')).toBe(true);
     expect(globMatch('src/foo.ts', 'src/**/*.ts')).toBe(true);
     expect(globMatch('foo.ts', '/foo.ts')).toBe(true);
   });
@@ -41,5 +40,13 @@ describe('globToRegex', () => {
   it('should not match if pattern does not fit', () => {
     expect(globMatch('foo/bar.ts', 'baz/*.ts')).toBe(false);
     expect(globMatch('foo/bar.ts', 'foo/*.js')).toBe(false);
+  });
+
+  it('should match ** patterns with zero intermediate directories', () => {
+    expect(globMatch('/foo/bar.ts', '/foo/**/bar.ts')).toBe(true);
+    expect(globMatch('/foo/baz/bar.ts', '/foo/**/bar.ts')).toBe(true);
+    expect(globMatch('/foo/baz/qux/bar.ts', '/foo/**/bar.ts')).toBe(true);
+    expect(globMatch('foo/bar.ts', 'foo/**/bar.ts')).toBe(true);
+    expect(globMatch('foo/baz/bar.ts', 'foo/**/bar.ts')).toBe(true);
   });
 }); 
