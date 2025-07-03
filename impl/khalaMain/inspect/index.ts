@@ -1,8 +1,8 @@
 import { Command } from "commander";
-import { existsSync, statSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { existsSync, statSync, readFileSync } from "node:fs";
+import { resolve, dirname, extname } from "node:path";
+import findTsConfig from "@i/findTsConfig";
 import type { InspectOptions } from "@d/cli/inspect";
-import findTsConfig from "./findTsConfig";
 import extractSymbols from "./extractSymbols";
 import formatOutput from "./formatOutput";
 

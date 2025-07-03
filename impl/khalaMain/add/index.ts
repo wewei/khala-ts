@@ -1,11 +1,11 @@
 import { Command } from "commander";
-import { existsSync, statSync } from "node:fs";
+import { existsSync, statSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import type { AddArguments, AddOptions } from "@d/cli/add";
 import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import getKhalaRoot from "./getKhalaRoot";
-import findTsConfig from "./findTsConfig";
-import parseTypeScriptFile from "./parseTypeScriptFile";
+import findTsConfig from "@i/findTsConfig";
+import parseTypeScriptFile from "@i/parseTypeScriptFile";
 import storeSymbols from "./storeSymbols";
 
 /**
