@@ -53,11 +53,13 @@ describe("parseTypeScriptFileV2", () => {
     
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
-      expect(result.value).toBeDefined();
+      const sourceFiles = result.value as Record<string, any>;
+      const mainFile = sourceFiles["/test.ts"];
+      expect(mainFile).toBeDefined();
       
       // Check that we have the expected nodes
       const nodes: string[] = [];
-      result.value.forEachChild((node) => {
+      mainFile.forEachChild((node: any) => {
         nodes.push(node.kind.toString());
       });
       
@@ -77,7 +79,7 @@ describe("parseTypeScriptFileV2", () => {
     expect(isSuccess(result)).toBe(false);
     if (!isSuccess(result)) {
       // The error should contain information about the missing file
-      expect(result.error).toMatch(/File .* not found/);
+      expect(result.error).toContain("File '/nonexistent.ts' not found.");
     }
   });
   
@@ -100,7 +102,8 @@ describe("parseTypeScriptFileV2", () => {
     // Should still succeed as TypeScript parser is lenient
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
-      expect(result.value).toBeDefined();
+      const sourceFiles = result.value as Record<string, any>;
+      expect(sourceFiles["/invalid.ts"]).toBeDefined();
     }
   });
   
@@ -124,7 +127,8 @@ describe("parseTypeScriptFileV2", () => {
     
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
-      expect(result.value).toBeDefined();
+      const sourceFiles = result.value as Record<string, any>;
+      expect(sourceFiles["/test.ts"]).toBeDefined();
     }
   });
 }); 
