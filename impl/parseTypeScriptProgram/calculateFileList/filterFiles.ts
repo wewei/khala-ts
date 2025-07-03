@@ -23,14 +23,10 @@ export function filterFilesByTsConfig(
   }
   // 否则使用 include 模式
   else if (include && include.length > 0) {
-    console.log('Filtering by include patterns:', include);
-    console.log('All files before filtering:', allFiles);
     filteredFiles = allFiles.filter(file => {
       const matches = include.some(pattern => globMatch(file, pattern));
-      console.log(`File ${file} matches include patterns: ${matches}`);
       return matches;
     });
-    console.log('Files after include filtering:', filteredFiles);
   }
   
   // 应用 exclude 模式

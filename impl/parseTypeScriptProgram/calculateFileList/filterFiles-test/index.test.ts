@@ -39,7 +39,7 @@ describe('filterFilesByTsConfig', () => {
   });
 
   it('should filter by exclude patterns', () => {
-    const allFiles = ['/src/main.ts', '/src/types.ts', '/src/test.ts', '/src/temp.ts'];
+    const allFiles = ['/src/main.ts', '/src/types.ts', '/src/main.test.ts', '/src/temp.ts'];
     const tsConfig: TsConfigFileList = {
       include: ['src/**/*.ts'],
       exclude: ['**/*.test.ts', '**/temp.ts'],
@@ -50,7 +50,7 @@ describe('filterFilesByTsConfig', () => {
     
     expect(result).toContain('/src/main.ts');
     expect(result).toContain('/src/types.ts');
-    expect(result).not.toContain('/src/test.ts');
+    expect(result).not.toContain('/src/main.test.ts');
     expect(result).not.toContain('/src/temp.ts');
     expect(result).toHaveLength(2);
   });
