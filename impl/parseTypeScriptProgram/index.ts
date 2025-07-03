@@ -102,14 +102,12 @@ const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): Result<
         baseDir,
       };
       
-      const fileListResult = calculateFileList({ vfs: enhancedVfs, tsConfig, compilerOptions: mergedOptions });
+      const fileListResult = calculateFileList({ vfs: enhancedVfs, tsConfig });
       if (!fileListResult.success) {
-        console.log('File list calculation failed:', fileListResult.error);
         return fail(fileListResult.error);
       }
       
       filesToParse = fileListResult.value;
-      console.log('Files to parse:', filesToParse);
     } else {
       return fail("No files specified for parsing. Provide filePath, files, or include patterns.");
     }

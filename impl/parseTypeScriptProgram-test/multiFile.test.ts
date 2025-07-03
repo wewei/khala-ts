@@ -55,10 +55,11 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(3);
-      expect(sourceFiles["/src/main.ts"]).toBeDefined();
-      expect(sourceFiles["/src/types.ts"]).toBeDefined();
-      expect(sourceFiles["/src/utils.ts"]).toBeDefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/main.ts");
+      expect(sourceFilePaths).toContain("/src/types.ts");
+      expect(sourceFilePaths).toContain("/src/utils.ts");
+      expect(sourceFilePaths).toHaveLength(3);
     }
   });
   
@@ -80,11 +81,12 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(3);
-      expect(sourceFiles["/src/main.ts"]).toBeDefined();
-      expect(sourceFiles["/src/types.ts"]).toBeDefined();
-      expect(sourceFiles["/src/utils.ts"]).toBeDefined();
-      expect(sourceFiles["/test/test.ts"]).toBeUndefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/main.ts");
+      expect(sourceFilePaths).toContain("/src/types.ts");
+      expect(sourceFilePaths).toContain("/src/utils.ts");
+      expect(sourceFilePaths).not.toContain("/test/test.ts");
+      expect(sourceFilePaths).toHaveLength(3);
     }
   });
   
@@ -92,7 +94,7 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     const vfs = createSystem(new Map([
       ["/src/main.ts", `export function main() {}`],
       ["/src/types.ts", `export type User = { name: string };`],
-      ["/src/test.ts", `export function test() {}`],
+      ["/src/main.test.ts", `export function test() {}`],
       ["/src/temp.ts", `export function temp() {}`],
     ]));
     
@@ -106,11 +108,12 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(2);
-      expect(sourceFiles["/src/main.ts"]).toBeDefined();
-      expect(sourceFiles["/src/types.ts"]).toBeDefined();
-      expect(sourceFiles["/src/test.ts"]).toBeUndefined();
-      expect(sourceFiles["/src/temp.ts"]).toBeUndefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/main.ts");
+      expect(sourceFilePaths).toContain("/src/types.ts");
+      expect(sourceFilePaths).not.toContain("/src/main.test.ts");
+      expect(sourceFilePaths).not.toContain("/src/temp.ts");
+      expect(sourceFilePaths).toHaveLength(2);
     }
   });
   
@@ -126,7 +129,7 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
       }`],
       ["/src/main.ts", `export function main() {}`],
       ["/src/types.ts", `export type User = { name: string };`],
-      ["/src/test.ts", `export function test() {}`],
+      ["/src/main.test.ts", `export function test() {}`],
     ]));
     
     const result = parseTypeScriptProgram({
@@ -140,10 +143,11 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(2);
-      expect(sourceFiles["/src/main.ts"]).toBeDefined();
-      expect(sourceFiles["/src/types.ts"]).toBeDefined();
-      expect(sourceFiles["/src/test.ts"]).toBeUndefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/main.ts");
+      expect(sourceFilePaths).toContain("/src/types.ts");
+      expect(sourceFilePaths).not.toContain("/src/main.test.ts");
+      expect(sourceFilePaths).toHaveLength(2);
     }
   });
   
@@ -161,9 +165,10 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(1);
-      expect(sourceFiles["/src/main.ts"]).toBeDefined();
-      expect(sourceFiles["/src/types.ts"]).toBeUndefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/main.ts");
+      expect(sourceFilePaths).not.toContain("/src/types.ts");
+      expect(sourceFilePaths).toHaveLength(1);
     }
   });
   
@@ -220,14 +225,15 @@ describe("parseTypeScriptProgram - Multi-file parsing", () => {
     expect(isSuccess(result)).toBe(true);
     if (isSuccess(result)) {
       const sourceFiles = result.value as Record<string, any>;
-      expect(Object.keys(sourceFiles)).toHaveLength(5);
-      expect(sourceFiles["/src/components/Button.tsx"]).toBeDefined();
-      expect(sourceFiles["/src/components/Input.tsx"]).toBeDefined();
-      expect(sourceFiles["/src/utils/helpers.ts"]).toBeDefined();
-      expect(sourceFiles["/src/utils/constants.ts"]).toBeDefined();
-      expect(sourceFiles["/src/pages/Home.tsx"]).toBeDefined();
-      expect(sourceFiles["/src/pages/About.tsx"]).toBeDefined();
-      expect(sourceFiles["/src/styles/global.css"]).toBeUndefined();
+      const sourceFilePaths = Object.keys(sourceFiles);
+      expect(sourceFilePaths).toContain("/src/components/Button.tsx");
+      expect(sourceFilePaths).toContain("/src/components/Input.tsx");
+      expect(sourceFilePaths).toContain("/src/utils/helpers.ts");
+      expect(sourceFilePaths).toContain("/src/utils/constants.ts");
+      expect(sourceFilePaths).toContain("/src/pages/Home.tsx");
+      expect(sourceFilePaths).toContain("/src/pages/About.tsx");
+      expect(sourceFilePaths).not.toContain("/src/styles/global.css");
+      expect(sourceFilePaths).toHaveLength(6);
     }
   });
 }); 

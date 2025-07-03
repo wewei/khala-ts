@@ -14,7 +14,6 @@ describe("parseTypeScriptProgram - Debug", () => {
       filePath: "/test.ts",
     });
     
-    console.log("Result:", result);
     expect(isSuccess(result)).toBe(true);
   });
   
@@ -29,7 +28,6 @@ describe("parseTypeScriptProgram - Debug", () => {
       files: ["/file1.ts", "/file2.ts"],
     });
     
-    console.log("Multi-file result:", result);
     expect(isSuccess(result)).toBe(true);
   });
 }); 
