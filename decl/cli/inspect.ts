@@ -42,6 +42,8 @@ export type SymbolInfo = {
   column: number;
   /** Whether symbol is exported */
   exported: boolean;
+  /** Whether symbol is exported as default */
+  isDefaultExport?: boolean;
   /** Symbol documentation/comment */
   documentation?: string;
   /** Symbol modifiers (public, private, etc.) */

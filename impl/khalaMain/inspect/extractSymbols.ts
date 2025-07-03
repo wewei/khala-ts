@@ -201,122 +201,163 @@ const extractSymbolsFromSourceFile = (
   options: InspectOptions
 ): SymbolInfo[] => {
   const symbols: SymbolInfo[] = [];
-  
-  // Import TypeScript to get the correct node kind constants
   const ts = require("typescript");
-  
-  const visitNode = (node: any): void => {
-    try {
-      // Extract symbols based on node kind
-      switch (node.kind) {
-        case ts.SyntaxKind.FunctionDeclaration:
-          if (node.name) {
-            symbols.push({
-              name: node.name.text,
-              kind: "function",
-              filePath,
-              line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-              column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
-              exported: hasExportModifier(node),
-              documentation: getDocumentation(node),
-              modifiers: getModifiers(node),
-              type: getReturnType(node)
-            });
-          }
-          break;
-          
-        case ts.SyntaxKind.VariableStatement:
-          if (node.declarationList && node.declarationList.declarations) {
-            node.declarationList.declarations.forEach((decl: any) => {
-              if (decl.name) {
-                symbols.push({
-                  name: decl.name.text,
-                  kind: "variable",
-                  filePath,
-                  line: sourceFile.getLineAndCharacterOfPosition(decl.getStart()).line + 1,
-                  column: sourceFile.getLineAndCharacterOfPosition(decl.getStart()).character + 1,
-                  exported: hasExportModifier(node),
-                  documentation: getDocumentation(decl),
-                  modifiers: getModifiers(decl),
-                  type: getVariableType(decl)
-                });
-              }
-            });
-          }
-          break;
-          
-        case ts.SyntaxKind.ClassDeclaration:
-          if (node.name) {
-            symbols.push({
-              name: node.name.text,
-              kind: "class",
-              filePath,
-              line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-              column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
-              exported: hasExportModifier(node),
-              documentation: getDocumentation(node),
-              modifiers: getModifiers(node)
-            });
-          }
-          break;
-          
-        case ts.SyntaxKind.InterfaceDeclaration:
-          if (node.name) {
-            symbols.push({
-              name: node.name.text,
-              kind: "interface",
-              filePath,
-              line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-              column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
-              exported: hasExportModifier(node),
-              documentation: getDocumentation(node),
-              modifiers: getModifiers(node)
-            });
-          }
-          break;
-          
-        case ts.SyntaxKind.TypeAliasDeclaration:
-          if (node.name) {
-            symbols.push({
-              name: node.name.text,
-              kind: "type",
-              filePath,
-              line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-              column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
-              exported: hasExportModifier(node),
-              documentation: getDocumentation(node),
-              modifiers: getModifiers(node)
-            });
-          }
-          break;
-          
-        case ts.SyntaxKind.EnumDeclaration:
-          if (node.name) {
-            symbols.push({
-              name: node.name.text,
-              kind: "enum",
-              filePath,
-              line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
-              column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
-              exported: hasExportModifier(node),
-              documentation: getDocumentation(node),
-              modifiers: getModifiers(node)
-            });
-          }
-          break;
-      }
-      
-      // Recursively visit child nodes
-      if (node.forEachChild) {
-        node.forEachChild(visitNode);
-      }
-    } catch (error) {
-      // Skip nodes that cause errors
+  const symbolMap = new Map<string, any>();
+
+  // First pass: collect all top-level declarations
+  const collectDeclarations = (node: any): void => {
+    switch (node.kind) {
+      case ts.SyntaxKind.FunctionDeclaration:
+        if (node.name) {
+          const symbolInfo = {
+            name: node.name.text,
+            kind: "function",
+            filePath,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+            column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
+            exported: hasExportModifier(node),
+            isDefaultExport: isDefaultExport(node),
+            documentation: getDocumentation(node),
+            modifiers: getModifiers(node),
+            type: getReturnType(node)
+          };
+          symbols.push(symbolInfo);
+          symbolMap.set(node.name.text, symbolInfo);
+        }
+        break;
+      case ts.SyntaxKind.VariableStatement:
+        if (node.declarationList && node.declarationList.declarations) {
+          node.declarationList.declarations.forEach((decl: any) => {
+            if (decl.name) {
+              const symbolInfo = {
+                name: decl.name.text,
+                kind: "variable",
+                filePath,
+                line: sourceFile.getLineAndCharacterOfPosition(decl.getStart()).line + 1,
+                column: sourceFile.getLineAndCharacterOfPosition(decl.getStart()).character + 1,
+                exported: hasExportModifier(node),
+                isDefaultExport: isDefaultExport(node),
+                documentation: getDocumentation(decl),
+                modifiers: getModifiers(decl),
+                type: getVariableType(decl)
+              };
+              symbols.push(symbolInfo);
+              symbolMap.set(decl.name.text, symbolInfo);
+            }
+          });
+        }
+        break;
+      case ts.SyntaxKind.ClassDeclaration:
+        if (node.name) {
+          const symbolInfo = {
+            name: node.name.text,
+            kind: "class",
+            filePath,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+            column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
+            exported: hasExportModifier(node),
+            isDefaultExport: isDefaultExport(node),
+            documentation: getDocumentation(node),
+            modifiers: getModifiers(node)
+          };
+          symbols.push(symbolInfo);
+          symbolMap.set(node.name.text, symbolInfo);
+        }
+        break;
+      case ts.SyntaxKind.InterfaceDeclaration:
+        if (node.name) {
+          const symbolInfo = {
+            name: node.name.text,
+            kind: "interface",
+            filePath,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+            column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
+            exported: hasExportModifier(node),
+            isDefaultExport: isDefaultExport(node),
+            documentation: getDocumentation(node),
+            modifiers: getModifiers(node)
+          };
+          symbols.push(symbolInfo);
+          symbolMap.set(node.name.text, symbolInfo);
+        }
+        break;
+      case ts.SyntaxKind.TypeAliasDeclaration:
+        if (node.name) {
+          const symbolInfo = {
+            name: node.name.text,
+            kind: "type",
+            filePath,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+            column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
+            exported: hasExportModifier(node),
+            isDefaultExport: isDefaultExport(node),
+            documentation: getDocumentation(node),
+            modifiers: getModifiers(node)
+          };
+          symbols.push(symbolInfo);
+          symbolMap.set(node.name.text, symbolInfo);
+        }
+        break;
+      case ts.SyntaxKind.EnumDeclaration:
+        if (node.name) {
+          const symbolInfo = {
+            name: node.name.text,
+            kind: "enum",
+            filePath,
+            line: sourceFile.getLineAndCharacterOfPosition(node.getStart()).line + 1,
+            column: sourceFile.getLineAndCharacterOfPosition(node.getStart()).character + 1,
+            exported: hasExportModifier(node),
+            isDefaultExport: isDefaultExport(node),
+            documentation: getDocumentation(node),
+            modifiers: getModifiers(node)
+          };
+          symbols.push(symbolInfo);
+          symbolMap.set(node.name.text, symbolInfo);
+        }
+        break;
     }
+    if (node.forEachChild) node.forEachChild(collectDeclarations);
   };
-  
+
+  // Second pass: process export declarations and assignments
+  const processExports = (node: any): void => {
+    switch (node.kind) {
+      case ts.SyntaxKind.ExportDeclaration:
+        if (node.exportClause && node.exportClause.kind === ts.SyntaxKind.NamedExports) {
+          node.exportClause.elements.forEach((element: any) => {
+            const symbolName = element.name.text;
+            const existingSymbol = symbolMap.get(symbolName);
+            if (existingSymbol) {
+              existingSymbol.exported = true;
+            }
+          });
+        }
+        break;
+      case ts.SyntaxKind.ExportAssignment:
+        let symbolName = undefined;
+        if (node.expression) {
+          if (node.expression.kind === ts.SyntaxKind.Identifier) {
+            symbolName = node.expression.text;
+          } else if (node.expression.kind === ts.SyntaxKind.PropertyAccessExpression && node.expression.name) {
+            symbolName = node.expression.name.text;
+          }
+        }
+        if (symbolName) {
+          const existingSymbol = symbolMap.get(symbolName);
+          if (existingSymbol) {
+            existingSymbol.isDefaultExport = true;
+            existingSymbol.exported = true;
+          }
+        }
+        break;
+    }
+    if (node.forEachChild) node.forEachChild(processExports);
+  };
+
+  // Run both passes
   if (sourceFile.forEachChild) {
-    sourceFile.forEachChild(visitNode);
+    sourceFile.forEachChild(collectDeclarations);
+    sourceFile.forEachChild(processExports);
   }
   return symbols;
 };
@@ -327,6 +368,14 @@ const extractSymbolsFromSourceFile = (
 const hasExportModifier = (node: any): boolean => {
   const ts = require("typescript");
   return node.modifiers?.some((mod: any) => mod.kind === ts.SyntaxKind.ExportKeyword) || false;
+};
+
+/**
+ * Check if a node is exported as default
+ */
+const isDefaultExport = (node: any): boolean => {
+  const ts = require("typescript");
+  return node.modifiers?.some((mod: any) => mod.kind === ts.SyntaxKind.DefaultKeyword) || false;
 };
 
 /**

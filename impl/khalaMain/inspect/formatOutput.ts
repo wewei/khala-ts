@@ -54,10 +54,11 @@ const formatTree = (result: InspectSymbolsResult, detailed: boolean): void => {
     
     for (const symbol of symbols) {
       const exportIcon = symbol.exported ? "📤" : "📄";
+      const defaultIcon = symbol.isDefaultExport ? "⭐" : "";
       const kindIcon = getKindIcon(symbol.kind);
       const lineInfo = detailed ? `:${symbol.line}:${symbol.column}` : `:${symbol.line}`;
       
-      console.log(`  ${exportIcon} ${kindIcon} ${symbol.name}${lineInfo}`);
+      console.log(`  ${exportIcon}${defaultIcon} ${kindIcon} ${symbol.name}${lineInfo}`);
       
       if (detailed && symbol.documentation) {
         console.log(`    📝 ${symbol.documentation.substring(0, 60)}${symbol.documentation.length > 60 ? "..." : ""}`);
@@ -87,7 +88,7 @@ const formatTable = (result: InspectSymbolsResult, detailed: boolean): void => {
   }
   
   // Create table headers
-  const headers = ["Name", "Kind", "File", "Line", "Exported"];
+  const headers = ["Name", "Kind", "File", "Line", "Exported", "Default"];
   if (detailed) {
     headers.push("Type", "Modifiers");
   }
@@ -106,7 +107,8 @@ const formatTable = (result: InspectSymbolsResult, detailed: boolean): void => {
       symbol.kind,
       symbol.filePath,
       (symbol.line || 0).toString(),
-      symbol.exported ? "✓" : "✗"
+      symbol.exported ? "✓" : "✗",
+      symbol.isDefaultExport ? "✓" : "✗"
     ];
     
     if (detailed) {
@@ -162,7 +164,8 @@ const calculateColumnWidths = (symbols: any[], headers: string[], detailed: bool
       symbol.kind,
       symbol.filePath,
       (symbol.line || 0).toString(),
-      symbol.exported ? "✓" : "✗"
+      symbol.exported ? "✓" : "✗",
+      symbol.isDefaultExport ? "✓" : "✗"
     ];
     
     if (detailed) {
