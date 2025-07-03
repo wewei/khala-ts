@@ -103,9 +103,9 @@ const formatTable = (result: InspectSymbolsResult, detailed: boolean): void => {
   // Print rows
   for (const symbol of result.symbols) {
     const row = [
-      symbol.name,
-      symbol.kind,
-      symbol.filePath,
+      symbol.name || "-",
+      symbol.kind || "-",
+      symbol.filePath || "-",
       (symbol.line || 0).toString(),
       symbol.exported ? "✓" : "✗",
       symbol.isDefaultExport ? "✓" : "✗"
@@ -160,9 +160,9 @@ const calculateColumnWidths = (symbols: any[], headers: string[], detailed: bool
   
   for (const symbol of symbols) {
     const row = [
-      symbol.name,
-      symbol.kind,
-      symbol.filePath,
+      symbol.name || "-",
+      symbol.kind || "-",
+      symbol.filePath || "-",
       (symbol.line || 0).toString(),
       symbol.exported ? "✓" : "✗",
       symbol.isDefaultExport ? "✓" : "✗"
@@ -172,8 +172,8 @@ const calculateColumnWidths = (symbols: any[], headers: string[], detailed: bool
       row.push(symbol.type || "-", symbol.modifiers?.join(", ") || "-");
     }
     
-    for (let i = 0; i < row.length; i++) {
-      widths[i] = Math.max(widths[i] || 0, row[i].length);
+    for (let i = 0; i < row.length && i < widths.length; i++) {
+      widths[i] = Math.max(widths[i] || 0, (row[i] || "").length);
     }
   }
   
@@ -184,7 +184,7 @@ const calculateColumnWidths = (symbols: any[], headers: string[], detailed: bool
  * Print a table row
  */
 const printTableRow = (row: string[], widths: number[]): void => {
-  const formattedRow = row.map((cell, i) => cell.padEnd(widths[i] || 0));
+  const formattedRow = row.map((cell, i) => (cell || "-").padEnd(widths[i] || 0));
   console.log(`| ${formattedRow.join(" | ")} |`);
 };
 

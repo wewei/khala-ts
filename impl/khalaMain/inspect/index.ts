@@ -41,7 +41,7 @@ const inspectCommand = (program: Command): void => {
         }
         
         // Extract symbols from the target
-        const symbols = await extractSymbols(resolvedTarget, tsConfigPath, options);
+        const symbols = await extractSymbols(resolvedTarget);
         
         // Format and display the output
         formatOutput(symbols, options);

@@ -1,36 +1,42 @@
-import { describe, it, expect } from "bun:test";
-import { createSystem } from "@typescript/vfs";
+import { describe, it, expect, beforeAll, afterAll } from "bun:test";
+import { writeFileSync, unlinkSync, mkdtempSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 import extractSymbols from "../inspect/extractSymbols";
 import type { InspectOptions } from "@d/cli/inspect";
 
 describe("inspect symbols", () => {
+  let tempDir: string;
+  
+  beforeAll(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "khala-inspect-test-"));
+  });
+  
+  afterAll(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+  
   it("should extract symbols from a simple TypeScript file", async () => {
-    const vfs = createSystem(new Map([
-      ["/test.ts", `
-        export function hello(name: string): string {
-          return \`Hello \${name}!\`;
-        }
-        
-        const greeting = "Hello World";
-        
-        export type User = {
-          name: string;
-          age: number;
-        };
-        
-        export interface Config {
-          apiUrl: string;
-          timeout: number;
-        }
-      `],
-    ]));
+    const testFile = join(tempDir, "test.ts");
+    writeFileSync(testFile, `
+      export function hello(name: string): string {
+        return \`Hello \${name}!\`;
+      }
+      
+      const greeting = "Hello World";
+      
+      export type User = {
+        name: string;
+        age: number;
+      };
+      
+      export interface Config {
+        apiUrl: string;
+        timeout: number;
+      }
+    `);
     
-    const options: InspectOptions = {
-      detailed: true,
-      format: "json"
-    };
-    
-    const result = await extractSymbols("/test.ts", "/tsconfig.json", options);
+    const result = await extractSymbols(testFile);
     
     expect(result.totalCount).toBe(4);
     expect(result.filesProcessed).toBe(1);
@@ -62,12 +68,10 @@ describe("inspect symbols", () => {
   });
   
   it("should handle files with no symbols", async () => {
-    const vfs = createSystem(new Map([
-      ["/empty.ts", `// This file has no symbols`],
-    ]));
+    const emptyFile = join(tempDir, "empty.ts");
+    writeFileSync(emptyFile, `// This file has no symbols`);
     
-    const options: InspectOptions = {};
-    const result = await extractSymbols("/empty.ts", "/tsconfig.json", options);
+    const result = await extractSymbols(emptyFile);
     
     expect(result.totalCount).toBe(0);
     expect(result.filesProcessed).toBe(1);
@@ -75,23 +79,21 @@ describe("inspect symbols", () => {
   });
   
   it("should handle class declarations", async () => {
-    const vfs = createSystem(new Map([
-      ["/class.ts", `
-        export class Calculator {
-          add(a: number, b: number): number {
-            return a + b;
-          }
+    const classFile = join(tempDir, "class.ts");
+    writeFileSync(classFile, `
+      export class Calculator {
+        add(a: number, b: number): number {
+          return a + b;
         }
-        
-        enum Status {
-          Active = "active",
-          Inactive = "inactive"
-        }
-      `],
-    ]));
+      }
+      
+      enum Status {
+        Active = "active",
+        Inactive = "inactive"
+      }
+    `);
     
-    const options: InspectOptions = {};
-    const result = await extractSymbols("/class.ts", "/tsconfig.json", options);
+    const result = await extractSymbols(classFile);
     
     expect(result.totalCount).toBe(2);
     
@@ -106,5 +108,32 @@ describe("inspect symbols", () => {
     expect(enumSymbol).toBeDefined();
     expect(enumSymbol!.kind).toBe("enum");
     expect(enumSymbol!.exported).toBe(false);
+  });
+  
+  it("should handle non-existent files", async () => {
+    const nonExistentFile = join(tempDir, "nonexistent.ts");
+    
+    const result = await extractSymbols(nonExistentFile);
+    
+    expect(result.totalCount).toBe(0);
+    expect(result.filesProcessed).toBe(0);
+    expect(result.symbols.length).toBe(0);
+    expect(result.errors).toBeDefined();
+    expect(result.errors!.length).toBeGreaterThan(0);
+    expect(result.errors![0]).toContain("does not exist");
+  });
+  
+  it("should handle non-TypeScript files", async () => {
+    const jsFile = join(tempDir, "test.js");
+    writeFileSync(jsFile, `console.log("Hello World");`);
+    
+    const result = await extractSymbols(jsFile);
+    
+    expect(result.totalCount).toBe(0);
+    expect(result.filesProcessed).toBe(0);
+    expect(result.symbols.length).toBe(0);
+    expect(result.errors).toBeDefined();
+    expect(result.errors!.length).toBeGreaterThan(0);
+    expect(result.errors![0]).toContain("not a TypeScript file");
   });
 }); 
