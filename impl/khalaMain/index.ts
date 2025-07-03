@@ -1,5 +1,6 @@
 import { Command } from "commander";
 import addCommand from "./add";
+import inspectCommand from "./inspect";
 
 /**
  * Main entry point for the Khala CLI.
@@ -15,10 +16,10 @@ const khalaMain = (): void => {
 
   // Import and register subcommands
   addCommand(program);
+  inspectCommand(program);
   
   // TODO: Import and register other subcommands when implemented
   // import searchCommand from "./search";
-  // import inspectCommand from "./inspect";
   // import bundleCommand from "./bundle";
   // import updateCommand from "./update";
   // import connectCommand from "./connect";
@@ -26,7 +27,6 @@ const khalaMain = (): void => {
 
   // TODO: Register other subcommands
   // searchCommand(program);
-  // inspectCommand(program);
   // bundleCommand(program);
   // updateCommand(program);
   // connectCommand(program);
