@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 
 /**
@@ -8,7 +8,7 @@ const findTsConfig = (targetPath: string): string => {
   let currentDir = resolve(targetPath);
   
   // If target is a file, start from its directory
-  if (!existsSync(currentDir) || !require("node:fs").statSync(currentDir).isDirectory()) {
+  if (!existsSync(currentDir) || !statSync(currentDir).isDirectory()) {
     currentDir = dirname(currentDir);
   }
   

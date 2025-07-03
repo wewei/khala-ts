@@ -1,8 +1,9 @@
-import { existsSync, statSync, readFileSync } from "node:fs";
+import { existsSync, statSync, readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname, extname } from "node:path";
 import { createSystem } from "@typescript/vfs";
 import parseTypeScriptProgram from "@i/parseTypeScriptProgram";
 import isSuccess from "@i/isSuccess";
+import * as ts from "typescript";
 import type { InspectOptions, SymbolInfo, InspectSymbolsResult } from "@d/cli/inspect";
 
 /**
@@ -152,7 +153,7 @@ const findTypeScriptFiles = (dirPath: string): string[] => {
   
   const traverse = (currentPath: string): void => {
     try {
-      const entries = require("node:fs").readdirSync(currentPath);
+      const entries = readdirSync(currentPath);
       
       for (const entry of entries) {
         const fullPath = resolve(currentPath, entry);
@@ -201,7 +202,6 @@ const extractSymbolsFromSourceFile = (
   options: InspectOptions
 ): SymbolInfo[] => {
   const symbols: SymbolInfo[] = [];
-  const ts = require("typescript");
   const symbolMap = new Map<string, any>();
 
   // First pass: collect all top-level declarations
@@ -366,7 +366,6 @@ const extractSymbolsFromSourceFile = (
  * Check if a node has export modifier
  */
 const hasExportModifier = (node: any): boolean => {
-  const ts = require("typescript");
   return node.modifiers?.some((mod: any) => mod.kind === ts.SyntaxKind.ExportKeyword) || false;
 };
 
@@ -374,7 +373,6 @@ const hasExportModifier = (node: any): boolean => {
  * Check if a node is exported as default
  */
 const isDefaultExport = (node: any): boolean => {
-  const ts = require("typescript");
   return node.modifiers?.some((mod: any) => mod.kind === ts.SyntaxKind.DefaultKeyword) || false;
 };
 
@@ -393,8 +391,6 @@ const getDocumentation = (node: any): string | undefined => {
  */
 const getModifiers = (node: any): string[] | undefined => {
   if (!node.modifiers) return undefined;
-  
-  const ts = require("typescript");
   
   return node.modifiers.map((mod: any) => {
     switch (mod.kind) {
