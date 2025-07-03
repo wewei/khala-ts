@@ -1,4 +1,4 @@
-import type { System, CompilerOptions } from "typescript";
+import type { System } from "typescript";
 
 export type TsConfigFileList = {
   /** Explicitly listed files */
@@ -16,6 +16,4 @@ export type FileListCalculatorOptions = {
   vfs: System;
   /** tsconfig.json configuration */
   tsConfig: TsConfigFileList;
-  /** Compiler options */
-  compilerOptions?: CompilerOptions;
 }; 
