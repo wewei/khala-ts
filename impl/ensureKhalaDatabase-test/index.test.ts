@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "bun:test";
 import { join } from "node:path";
-import { rmSync, mkdtempSync } from "node:fs";
+import { rmSync, mkdtempSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { Database } from "bun:sqlite";
-import ensureKhalaDatabase from "../ensureKhalaDatabase";
+import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import type { DatabaseInitResult } from "@d/database/khala";
 
 describe("ensureKhalaDatabase", () => {
@@ -60,7 +60,6 @@ describe("ensureKhalaDatabase", () => {
   
   it("should create semantic index directory structure", () => {
     const semanticIndexPath = join(testFolder, "semantic-index");
-    const { readdirSync } = require("node:fs");
     
     const subdirs = readdirSync(semanticIndexPath);
     expect(subdirs).toContain("symbols");

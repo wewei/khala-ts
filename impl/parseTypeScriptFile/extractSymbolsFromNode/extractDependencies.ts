@@ -1,19 +1,19 @@
 import type { Node, SourceFile, ImportDeclaration, TypeReferenceNode, PropertyAccessExpression, Identifier, NamedImports } from "typescript";
+import * as ts from "typescript";
 
-const extractDependencies = (node: Node, sourceFile: SourceFile): string[] => {
+const extractDependencies = (node: Node, _sourceFile: SourceFile): string[] => {
   const dependencies: string[] = [];
-  const ts = require("typescript");
   
   const visitNode = (n: Node) => {
     // Look for import statements
     if (ts.isImportDeclaration(n)) {
       const importDecl = n as ImportDeclaration;
       const importClause = importDecl.importClause;
-      if (importClause && importClause.namedBindings && ts.isNamedImports(importClause.namedBindings)) {
+      if (importClause?.namedBindings && ts.isNamedImports(importClause.namedBindings)) {
         const namedImports = importClause.namedBindings as NamedImports;
-        namedImports.elements.forEach((element) => {
+        for (const element of namedImports.elements) {
           dependencies.push(element.name.text);
-        });
+        }
       }
     }
     

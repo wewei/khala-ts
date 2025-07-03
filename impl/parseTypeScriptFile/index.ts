@@ -1,6 +1,7 @@
 import { resolve } from "node:path";
 import type { SymbolInfo } from "@d/typescript/parser";
 import type { Node, SourceFile } from "typescript";
+import { createProgram } from "typescript";
 import loadCompilerOptions from "./loadCompilerOptions";
 import extractSymbolsFromNode from "./extractSymbolsFromNode";
 
@@ -12,7 +13,6 @@ const parseTypeScriptFile = (filePath: string, tsConfigPath: string): SymbolInfo
   const compilerOptions = loadCompilerOptions(resolvedTsConfigPath);
   
   // Create TypeScript program
-  const { createProgram, getSourceFile } = require("typescript");
   const program = createProgram([resolvedPath], compilerOptions);
   
   const sourceFile = program.getSourceFile(resolvedPath);

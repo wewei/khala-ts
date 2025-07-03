@@ -4,6 +4,7 @@ import type { Result } from "@d/common/result";
 import success from "@i/success";
 import fail from "@i/fail";
 import { calculateFileList, parseTsConfigFileList, type TsConfigFileList } from "./calculateFileList";
+import * as ts from "typescript";
 
 type ParseTypeScriptProgramOptions = {
   /** Virtual file system containing the TypeScript files */
@@ -46,27 +47,8 @@ const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): Result<
   } = options;
   
   try {
-    // Import TypeScript dynamically to avoid circular dependencies
-    const ts = require("typescript");
-    
-    // Default compiler options
-    const defaultOptions: CompilerOptions = {
-      target: ts.ScriptTarget.ES2020,
-      module: ts.ModuleKind.ESNext,
-      moduleResolution: ts.ModuleResolutionKind.NodeJs,
-      allowSyntheticDefaultImports: true,
-      esModuleInterop: true,
-      skipLibCheck: true,
-      strict: true,
-      noImplicitAny: true,
-      strictNullChecks: true,
-    };
-    
-    // Merge provided options with defaults
-    const mergedOptions = { ...defaultOptions, ...compilerOptions };
-    
     // Load TypeScript standard library files
-    const libFiles = createDefaultMapFromNodeModules(mergedOptions, ts);
+    const libFiles = createDefaultMapFromNodeModules(compilerOptions, ts);
     
     // Create enhanced VFS with lib files
     const enhancedVfs = {
@@ -117,7 +99,7 @@ const parseTypeScriptProgram = (options: ParseTypeScriptProgramOptions): Result<
     }
     
     // Create a virtual TypeScript environment with all files
-    const env = createVirtualTypeScriptEnvironment(enhancedVfs, filesToParse, ts, mergedOptions);
+    const env = createVirtualTypeScriptEnvironment(enhancedVfs, filesToParse, ts, compilerOptions);
     
     // Get all source files from the environment
     const program = env.languageService.getProgram();

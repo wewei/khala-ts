@@ -2,11 +2,10 @@ import { describe, it, expect } from "bun:test";
 import parseTypeScriptProgram from "../parseTypeScriptProgram";
 import { createSystem, createDefaultMapFromNodeModules } from "@typescript/vfs";
 import isSuccess from "@i/isSuccess";
+import * as ts from "typescript";
 
 // Helper function to create a VFS with TypeScript standard library files
 const createVFSWithLib = (files: Map<string, string>) => {
-  const ts = require("typescript");
-  
   // Load TypeScript standard library files from node_modules
   const libFiles = createDefaultMapFromNodeModules({
     target: ts.ScriptTarget.ES2020,

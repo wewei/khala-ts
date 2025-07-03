@@ -1,5 +1,6 @@
 import type { SymbolInfo } from "@d/typescript/parser";
 import type { Node, SourceFile } from "typescript";
+import * as ts from "typescript";
 import pushFunctionDeclaration from "./pushFunctionDeclaration";
 import pushVariableStatement from "./pushVariableStatement";
 import pushTypeAliasDeclaration from "./pushTypeAliasDeclaration";
@@ -10,7 +11,6 @@ import pushModuleDeclaration from "./pushModuleDeclaration";
 
 const extractSymbolsFromNode = (node: Node, sourceFile: SourceFile): SymbolInfo[] => {
   const symbols: SymbolInfo[] = [];
-  const ts = require("typescript");
   
   // Only process top-level nodes
   if (node.parent && node.parent.kind !== ts.SyntaxKind.SourceFile) {
