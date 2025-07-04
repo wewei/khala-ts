@@ -1,21 +1,50 @@
 import { join } from "node:path";
 import { existsSync, mkdirSync } from "node:fs";
 import type { KhalaDatabaseConfig, DatabaseInitResult } from "@d/database/khala";
+import ensureFileSystemStorage from "./ensureFileSystemStorage";
 import ensureSymbolDatabase from "./ensureSymbolDatabase";
 import ensureSemanticIndex from "./ensureSemanticIndex";
 
+const createDirectoryStructure = (folder: string): void => {
+  const dirs = [
+    join(folder, "source"),
+    join(folder, "ast"),
+    join(folder, "semantic-index")
+  ];
+  
+  for (const dir of dirs) {
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+  }
+};
+
 const ensureKhalaDatabase = (folder: string): DatabaseInitResult => {
   try {
-    // Ensure the folder exists
+    // Ensure the main folder exists
     if (!existsSync(folder)) {
       mkdirSync(folder, { recursive: true });
     }
 
+    // Create directory structure for three-layer storage
+    createDirectoryStructure(folder);
+
     const config: KhalaDatabaseConfig = {
       folder,
+      sourceFilesPath: join(folder, "source"),
+      astFilesPath: join(folder, "ast"),
       sqlitePath: join(folder, "khala.db"),
       semanticIndexPath: join(folder, "semantic-index"),
     };
+
+    // Initialize file system storage
+    const fileSystemResult = ensureFileSystemStorage(config);
+    if (!fileSystemResult.success) {
+      return {
+        success: false,
+        error: `Failed to initialize file system storage: ${fileSystemResult.error}`,
+      };
+    }
 
     // Initialize SQLite database
     const sqliteResult = ensureSymbolDatabase(config);
@@ -37,6 +66,8 @@ const ensureKhalaDatabase = (folder: string): DatabaseInitResult => {
 
     return {
       success: true,
+      sourceFilesPath: config.sourceFilesPath,
+      astFilesPath: config.astFilesPath,
       sqlitePath: config.sqlitePath,
       semanticIndexPath: config.semanticIndexPath,
     };

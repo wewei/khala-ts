@@ -8,8 +8,8 @@ const createSemanticIndexStructure = (semanticIndexPath: string): void => {
     mkdirSync(semanticIndexPath, { recursive: true });
   }
 
-  // Create subdirectories for different types of embeddings
-  const subdirs = ["symbols", "descriptions", "content"];
+  // Create subdirectories for LanceDB tables
+  const subdirs = ["symbols", "embeddings"];
   
   for (const subdir of subdirs) {
     const subdirPath = join(semanticIndexPath, subdir);
@@ -20,8 +20,27 @@ const createSemanticIndexStructure = (semanticIndexPath: string): void => {
 };
 
 const createLanceDBConfig = (semanticIndexPath: string): void => {
-  // Create a basic LanceDB configuration file
+  // Create a basic LanceDB configuration file for symbol semantic indexing
   const configPath = join(semanticIndexPath, "lancedb-config.json");
+  
+  // Configuration for symbol semantic indexing
+  const config = {
+    version: 1,
+    tables: {
+      symbols: {
+        schema: {
+          symbol_key: "string",
+          embeddings: "float32[1536]", // OpenAI embedding dimension
+          keywords: "string[]",
+          description: "string",
+          last_indexed: "date"
+        },
+        path: join(semanticIndexPath, "symbols", "symbols.lance")
+      }
+    },
+    embedding_model: "text-embedding-ada-002",
+    embedding_dimension: 1536
+  };
   
   // For now, we'll just create the directory structure
   // LanceDB will create its own configuration when first used
