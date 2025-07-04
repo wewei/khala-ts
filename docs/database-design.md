@@ -2,326 +2,440 @@
 
 ## Overview
 
-Khala uses an atom-based database design where individual symbols (functions, types, classes, etc.) are stored as
-independent entities rather than whole files. This approach reflects how code actually works - symbols can move between
-files, have dependencies on each other, and exist independently.
+Khala uses a three-layer immutable database design that provides efficient semantic indexing and AST-based symbol tracking. The design is optimized for read-heavy operations with append-only semantics, supporting source file addition and symbol pruning for maintenance.
 
 ## Core Principles
 
-### Atom-Based Storage
+### Immutable Design
 
-- Store individual symbols, not files
-- Each symbol is a self-contained entity
-- Symbols can move between files without losing history
-- No redundant storage of file content
+- **Append-only operations**: No modification, only addition and pruning
+- **Hash-based identification**: Source files identified by RIPEMD-160 hash (40位16进制字符串)
+- **Position-based AST nodes**: AST nodes represented as position segments
+- **Definition-Reference pattern**: Symbols have one definition and multiple references
 
-### Module-Based Namespaces
+### Semantic Indexing
 
-- Use TypeScript namespaces for organization
-- Virtual module concept independent of file system
-- Flexible implementation (file-based, in-memory, or hybrid)
-- Respect existing TypeScript namespace declarations
+- **Symbol-focused indexing**: Only symbols are indexed for semantic search
+- **Efficient pruning**: Remove unused symbols and their dependencies
+- **Hash-based deduplication**: Prevent duplicate source files automatically using RIPEMD-160
 
-### Comprehensive Dependencies
+### AST Segment Tree
 
-- Track all symbol references, not just imports
-- Dependencies = what's needed for compiler to understand a symbol
-- Proper dependency direction (functions can depend on types, not vice versa)
-- Enable accurate impact analysis and refactoring
+- **Position-based nodes**: AST nodes as <hash, start, end> tuples
+- **Efficient traversal**: Segment tree for fast node lookup
+- **Attribute extraction**: Key attributes stored for quick access
 
-## Symbol Structure
+## Three-Layer Architecture
 
-### Symbol Type
+### 1. SourceFile Layer
 
 ```typescript
-type Symbol = {
-  qualifiedName: string;         // Primary key - namespace.name (e.g., "Utils.formatString")
-  description: string;           // Purpose/description for semantic indexing
-  ast: ts.Node;                  // TypeScript AST node - contains all symbol details
-  dependencies: string[];        // Qualified names of symbols this depends on
-  dependents: string[];          // Qualified names of symbols that depend on this
-  createdAt: Date;
-  updatedAt: Date;
+type SourceFile = {
+  key: string;                    // RIPEMD-160 hash (40位16进制字符串)
+  description?: string;           // Semantic description for human/AI understanding
+  content: string;                // Original file content
+  size: number;                   // File size in bytes
+  createdAt: Date;                // When file was added
 };
 
-// Helper functions to extract name and namespace
-const getName = (qualifiedName: string): string => 
-  qualifiedName.split('.').pop() || qualifiedName;
-
-const getNamespace = (qualifiedName: string): string => 
-  qualifiedName.includes('.') ? qualifiedName.substring(0, qualifiedName.lastIndexOf('.')) : '';
+// Example:
+{
+  key: "a1b2c3d4e5f6...",
+  description: "String utility functions for formatting and manipulation",
+  content: "export function formatString(str: string): string { ... }",
+  size: 1024,
+  createdAt: "2024-01-01T00:00:00Z"
+}
 ```
 
-### Why Single Symbol Type?
-
-The AST already contains all the information we need:
-- **Kind**: Available via `ast.kind` (FunctionDeclaration, ClassDeclaration, etc.)
-- **Properties**: Available by traversing the AST
-- **Types**: Available in the AST structure
-- **Structure**: The AST preserves all syntactic and semantic relationships
-
-This approach is:
-- **Simpler**: One type instead of many specialized types
-- **More flexible**: AST can represent any TypeScript construct
-- **More accurate**: AST is the authoritative source of truth
-- **Easier to maintain**: No need to keep multiple type definitions in sync
-
-## Namespace Strategy
-
-### TypeScript Namespace Integration
-
-Khala respects existing TypeScript namespace declarations:
+### 2. AST Node Layer
 
 ```typescript
-// TypeScript code
-namespace Utils {
-  export function formatString(str: string): string { }
-  export type StringFormat = "uppercase" | "lowercase";
-}
+type ASTNode = {
+  sourceFileKey: string;          // Reference to source file (RIPEMD-160 hash)
+  startPos: number;               // Start position in source file
+  endPos: number;                 // End position in source file
+  kind: string;                   // Node kind (FunctionDeclaration, etc.)
+  attributes: Record<string, any>; // Extracted attributes for quick access
+};
 
-// In Khala database:
+type ASTNodeKey = {
+  sourceFileKey: string;          // RIPEMD-160 hash
+  startPos: number;
+  endPos: number;
+};
+
+// Example:
 {
-  qualifiedName: "Utils.formatString",
-  namespace: "Utils",
+  sourceFileKey: "a1b2c3d4e5f6...",
+  startPos: 0,
+  endPos: 150,
+  kind: "FunctionDeclaration",
+  attributes: {
+    name: "formatString",
+    isExported: true,
+    isDefault: false,
+    parameterCount: 1,
+    returnType: "string"
+  }
+}
+```
+
+### 3. Symbol Layer
+
+```typescript
+type SymbolKind = 
+  | "function"
+  | "class" 
+  | "interface"
+  | "type"
+  | "enum"
+  | "variable"
+  | "namespace"
+  | "module";
+
+type Symbol = {
+  key: string;                    // 40位16进制字符串 (时间戳+随机函数生成)
+  sourceFileKey: string;          // Source file containing definition (RIPEMD-160 hash)
+  startPos: number;               // Start position of defining AST node
+  endPos: number;                 // End position of defining AST node
+  name: string;                   // Symbol name
+  kind: SymbolKind;               // Symbol kind
+  description?: string;           // Semantic description for indexing
+  dependencies: string[];         // Symbol keys this definition depends on
+};
+
+type SymbolRef = {
+  sourceFileKey: string;          // Source file containing reference (RIPEMD-160 hash)
+  startPos: number;               // Start position of referencing AST node
+  endPos: number;                 // End position of referencing AST node
+  definitionKey: string;          // Reference to symbol definition key (40位16进制字符串)
+  referenceType: "import" | "usage" | "export";
+};
+
+// Example Symbol Definition:
+{
+  key: "12345678-1234-1234-1234-123456789abc",
+  sourceFileKey: "a1b2c3d4e5f6...",
+  startPos: 0,
+  endPos: 150,
   name: "formatString",
-  kind: "FunctionDeclaration",
-  description: "Formats a string according to the specified format pattern",
-  ast: /* TypeScript AST node */,
-  dependencies: [],
-  dependents: []
+  kind: "function",
+  description: "Formats a string according to specified pattern",
+  dependencies: [
+    "87654321-4321-4321-4321-cba987654321" // helper function key
+  ]
 }
 
+// Note: Symbol properties like visibility, modifiers, etc. are stored in the corresponding AST node
+// and can be queried using the symbol's position range:
+const getSymbolProperties = async (symbolDef: Symbol) => {
+  const astNode = await getASTNode({
+    sourceFileKey: symbolDef.sourceFileKey,
+    startPos: symbolDef.startPos,
+    endPos: symbolDef.endPos
+  });
+  return astNode.attributes; // Contains: isExported, isDefault, modifiers, etc.
+};
+
+// Example Symbol Reference:
 {
-  qualifiedName: "Utils.StringFormat", 
-  namespace: "Utils",
-  name: "StringFormat",
-  kind: "TypeAliasDeclaration",
-  description: "String format options",
-  ast: /* TypeScript AST node */,
-  dependencies: [],
-  dependents: []
+  sourceFileKey: "b2c3d4e5f6a1...",
+  startPos: 10,
+  endPos: 25,
+  definitionKey: "12345678-1234-1234-1234-123456789abc",
+  referenceType: "import"
 }
 ```
 
-### Default Namespace
+## Operations
 
-For files without explicit namespaces:
+### High Level Operations (User Operations)
+
+#### Source File Operations
+```typescript
+// 1. Add a source file (自动生成 AST 和符号索引)
+addSourceFile(content: string, description?: string): Promise<SourceFile>
+
+// 2. Get a source file
+getSourceFile(key: string): Promise<SourceFile | null>
+```
+
+#### AST Node Operations
+```typescript
+// 1. Get the root node of a source file
+getRootNode(sourceFileKey: string): Promise<ASTNode | null>
+
+// 2. Get the children of an AST node
+getChildren(parentNode: ASTNode): Promise<ASTNode[]>
+
+// 3. Get the parent of an AST node
+getParent(childNode: ASTNode): Promise<ASTNode | null>
+```
+
+#### Symbol Operations
+```typescript
+// 1. Semantic search of symbols
+searchSymbols(query: string, limit?: number): Promise<Symbol[]>
+
+// 2. Query symbols in a certain source file
+getSymbolsInFile(sourceFileKey: string): Promise<Symbol[]>
+
+// 3. Query symbol references
+getSymbolReferences(symbolKey: string): Promise<SymbolRef[]>
+
+// 4. Remove a symbol (blocked if has dependants)
+removeSymbol(symbolKey: string): Promise<{ success: boolean, dependants?: Symbol[] }>
+
+// 5. Cascade remove a symbol and all its dependants
+cascadeRemoveSymbol(symbolKey: string): Promise<void>
+
+// 6. Get all direct and indirect dependant symbols
+getDependantSymbols(symbolKey: string): Promise<Symbol[]>
+```
+
+### Low Level Operations (Internal Storage Operations)
+
+基于 High Level 操作的需求分析，需要以下底层操作：
+
+#### File System Operations
+```typescript
+// 源文件存储
+storeSourceFile(content: string, key: string): Promise<void>
+getSourceFileContent(key: string): Promise<string | null>
+removeSourceFile(key: string): Promise<void>
+
+// AST 存储
+storeAST(key: string, nodes: ASTNode[]): Promise<void>
+getAST(key: string): Promise<ASTNode[] | null>
+removeAST(key: string): Promise<void>
+```
+
+#### Database Operations
+```typescript
+// 符号存储
+storeSymbols(symbols: Symbol[]): Promise<void>
+getSymbol(key: string): Promise<Symbol | null>
+getSymbolsByFile(sourceFileKey: string): Promise<Symbol[]>
+removeSymbol(key: string): Promise<void>
+
+// 符号引用存储
+storeSymbolRefs(refs: SymbolRef[]): Promise<void>
+getSymbolRefs(symbolKey: string): Promise<SymbolRef[]>
+removeSymbolRefs(symbolKey: string): Promise<void>
+```
+
+#### Semantic Index Operations
+```typescript
+// 语义索引
+indexSymbol(symbol: Symbol): Promise<void>
+searchSymbols(query: string, limit?: number): Promise<Symbol[]>
+removeSymbolFromIndex(symbolKey: string): Promise<void>
+```
+
+## Semantic Indexing
 
 ```typescript
+type SemanticIndex = {
+  symbolKey: string;              // Reference to symbol definition key
+  embeddings: number[];           // Vector representation
+  keywords: string[];             // Extracted keywords
+  description: string;            // Human-readable description
+  lastIndexed: Date;
+};
+
+// 语义索引接口
+indexSymbol(symbol: Symbol): Promise<void>
+searchSymbols(query: string, limit?: number): Promise<Symbol[]>
+removeSymbol(symbolKey: string): Promise<void>
+```
+
+## Hybrid Storage Implementation
+
+Khala uses a hybrid storage approach that optimizes for different data types:
+
+- **File System**: Source files and AST data (large, immutable content)
+- **SQLite**: Symbol definitions and references (structured, relational data)
+- **LanceDB**: Semantic indexing (vector embeddings for similarity search)
+
+### File System Storage
+
+#### Source File Storage
+
+Source files are stored in the file system using a hash-based directory structure:
+
+```typescript
+type FileSystemStorage = {
+  basePath: string;               // Base directory for all storage
+  sourceFilesPath: string;        // Path to source files directory
+  astFilesPath: string;           // Path to AST files directory
+};
+
+// File path structure: {basePath}/source/{first2chars}/{rest}.ts
+// Example: /data/khala/source/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// 使用 RIPEMD-160 hash 的前2位字符作为目录名
+
+const getSourceFilePath = (hash: string): string => {
+  const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
+  const rest = hash.substring(2);            // 剩余38位
+  return path.join(basePath, 'source', first2Chars, `${rest}.ts`);
+};
+
+const getASTFilePath = (hash: string): string => {
+  const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
+  const rest = hash.substring(2);            // 剩余38位
+  return path.join(basePath, 'ast', first2Chars, `${rest}.ast.json`);
+};
+```
+
+#### Source File Operations
+
+```typescript
+// 文件系统存储接口
+type SourceFileStore = {
+  add: (content: string, description?: string) => Promise<SourceFile>;
+  get: (key: string) => Promise<SourceFile | null>;
+  exists: (key: string) => Promise<boolean>;
+  remove: (key: string) => Promise<void>;
+};
+
+// 文件路径生成
+type FilePathGenerator = {
+  getSourceFilePath: (hash: string) => string;
+  getASTFilePath: (hash: string) => string;
+};
+
+// 示例路径结构
+// 源文件: /data/khala/source/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// AST文件: /data/khala/ast/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
+```
+
+#### AST Storage
+
+AST data is stored as JSON files alongside source files:
+
+```typescript
+type ASTFile = {
+  version: number;                // AST version for compatibility
+  nodes: ASTNodeWithoutSourceFileKey[];
+};
+
+type ASTNodeWithoutSourceFileKey = Omit<ASTNode, 'sourceFileKey'>;
+
+// Example AST file: /data/khala/ast/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
 {
-  qualifiedName: "formatString",
-  namespace: "",
-  name: "formatString",
-  kind: "FunctionDeclaration",
-  description: "Formats a string according to the specified format pattern",
-  ast: /* TypeScript AST node */,
-  dependencies: [],
-  dependents: []
-}
-```
-
-### Nested Namespaces
-
-Support for nested namespace structures:
-
-```typescript
-namespace Utils.String {
-  export function format() { }
+  "version": 1,
+  "nodes": [
+    {
+      "startPos": 0,
+      "endPos": 150,
+      "kind": "FunctionDeclaration",
+      "attributes": {
+        "name": "formatString",
+        "isExported": true,
+        "isDefault": false,
+        "parameterCount": 1,
+        "returnType": "string"
+      }
+    }
+  ]
 }
 
-// In database:
-{
-  qualifiedName: "Utils.String.format",
-  namespace: "Utils.String",
-  name: "format",
-  kind: "FunctionDeclaration",
-  description: "Formats a string",
-  ast: /* TypeScript AST node */,
-  dependencies: [],
-  dependents: []
-}
+// AST存储接口
+type ASTStore = {
+  storeAST: (sourceFileKey: string, nodes: ASTNode[]) => Promise<void>;
+  getAST: (sourceFileKey: string) => Promise<ASTNode[] | null>;
+  getASTNodesInRange: (sourceFileKey: string, startPos: number, endPos: number) => Promise<ASTNode[]>;
+  removeAST: (sourceFileKey: string) => Promise<void>;
+};
 ```
 
-## Dependency Rules
+### SQLite Database Schema
 
-### Allowed Dependencies
-
-- **Function → Type**: Functions can use types
-- **Function → Interface**: Functions can implement interfaces
-- **Class → Interface**: Classes can implement interfaces
-- **Interface → Interface**: Interfaces can extend interfaces
-- **Function → Function**: Functions can call other functions
-
-### Forbidden Dependencies
-
-- **Type → Function**: Types cannot depend on functions
-- **Type → Class**: Types cannot depend on classes
-- **Interface → Function**: Interfaces cannot depend on functions
-
-### Dependency Examples
-
-```typescript
-// Function using types and calling other functions
-function processUser(user: User, options: ProcessOptions): Result {
-  const validator = createValidator(options);
-  return validator.validate(user);
-}
-
-// Dependencies (using qualified names):
-// - "User" (type reference - root namespace)
-// - "ProcessOptions" (type reference - root namespace) 
-// - "Result" (type reference - root namespace)
-// - "Utils.createValidator" (function call)
-// - "Utils.Validator.validate" (method call)
-```
-
-## Description Generation
-
-### Priority Order
-
-1. **JSDoc**: Extract from existing documentation
-2. **LLM**: Generate using AI if API configured
-3. **Manual**: Prompt for user input
-
-### JSDoc Integration
-
-```typescript
-/**
- * Formats a string according to the specified format pattern
- * @param str - The string to format
- * @param format - The format pattern to apply
- * @returns The formatted string
- */
-function formatString(str: string, format: string): string { }
-
-// Extracted description:
-"Formats a string according to the specified format pattern"
-```
-
-### LLM Generation
-
-When JSDoc is not available and LLM API is configured:
-
-```typescript
-// Input to LLM:
-// Symbol: formatString
-// Kind: function
-// Type: (str: string, format: string): string
-// Content: function formatString(str: string, format: string): string { ... }
-
-// Generated description:
-"Formats a string using the specified format pattern"
-```
-
-## Database Schema (SQLite)
-
-### Symbols Table
+SQLite用于存储符号定义和引用，支持关系型查询：
 
 ```sql
--- Enable foreign key constraints
-PRAGMA foreign_keys = ON;
-
--- Symbols table with SQLite optimizations
-CREATE TABLE symbols (
-  qualified_name TEXT PRIMARY KEY,
-  namespace TEXT NOT NULL,       -- Derived from qualified_name for faster queries (empty string for root)
-  name TEXT NOT NULL,            -- Derived from qualified_name for faster queries
-  kind TEXT NOT NULL,            -- For faster search (FunctionDeclaration, ClassDeclaration, etc.)
-  description TEXT NOT NULL,
-  ast TEXT NOT NULL,             -- JSON serialized TypeScript AST
-  created_at DATETIME DEFAULT (datetime('now')),
-  updated_at DATETIME DEFAULT (datetime('now'))
-);
-
--- Indexes for common query patterns
-CREATE INDEX idx_symbols_namespace ON symbols(namespace);
-CREATE INDEX idx_symbols_name ON symbols(name);
-CREATE INDEX idx_symbols_kind ON symbols(kind);
-CREATE INDEX idx_symbols_namespace_kind ON symbols(namespace, kind);
-CREATE INDEX idx_symbols_created_at ON symbols(created_at);
-```
-
-### Dependencies Table
-
-```sql
-CREATE TABLE dependencies (
-  from_qualified_name TEXT NOT NULL,
-  to_qualified_name TEXT NOT NULL,
-  dependency_type TEXT DEFAULT 'reference',
-  context TEXT,
-  created_at DATETIME DEFAULT (datetime('now')),
-  PRIMARY KEY (from_qualified_name, to_qualified_name),
-  FOREIGN KEY (from_qualified_name) REFERENCES symbols(qualified_name) ON DELETE CASCADE,
-  FOREIGN KEY (to_qualified_name) REFERENCES symbols(qualified_name) ON DELETE CASCADE
-);
-
--- Indexes for dependency queries
-CREATE INDEX idx_dependencies_from ON dependencies(from_qualified_name);
-CREATE INDEX idx_dependencies_to ON dependencies(to_qualified_name);
-CREATE INDEX idx_dependencies_type ON dependencies(dependency_type);
-```
-
-### Namespaces Table
-
-```sql
-CREATE TABLE namespaces (
-  name TEXT PRIMARY KEY,
+-- 源文件元数据表（用于快速查询，避免读取文件）
+CREATE TABLE source_file_metadata (
+  key TEXT PRIMARY KEY,
   description TEXT,
-  parent_namespace TEXT,
-  created_at DATETIME DEFAULT (datetime('now')),
-  FOREIGN KEY (parent_namespace) REFERENCES namespaces(name) ON DELETE CASCADE
+  size INTEGER NOT NULL,
+  created_at DATETIME NOT NULL
 );
 
--- Index for parent namespace lookups
-CREATE INDEX idx_namespaces_parent ON namespaces(parent_namespace);
+-- 符号定义表
+CREATE TABLE symbol_definitions (
+  key TEXT PRIMARY KEY,
+  source_file_key TEXT NOT NULL,
+  start_pos INTEGER NOT NULL,
+  end_pos INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  description TEXT,
+  dependencies TEXT, -- JSON数组，存储依赖的符号key
+  created_at DATETIME NOT NULL,
+  FOREIGN KEY (source_file_key) REFERENCES source_file_metadata(key)
+);
+
+-- 符号引用表
+CREATE TABLE symbol_references (
+  source_file_key TEXT NOT NULL,
+  start_pos INTEGER NOT NULL,
+  end_pos INTEGER NOT NULL,
+  definition_key TEXT NOT NULL,
+  reference_type TEXT NOT NULL, -- 'import', 'usage', 'export'
+  created_at DATETIME NOT NULL,
+  PRIMARY KEY (source_file_key, start_pos, end_pos),
+  FOREIGN KEY (source_file_key) REFERENCES source_file_metadata(key),
+  FOREIGN KEY (definition_key) REFERENCES symbol_definitions(key)
+);
+
+-- 性能索引
+CREATE INDEX idx_symbol_definitions_source_file 
+  ON symbol_definitions(source_file_key);
+CREATE INDEX idx_symbol_definitions_name 
+  ON symbol_definitions(name);
+CREATE INDEX idx_symbol_references_definition 
+  ON symbol_references(definition_key);
+CREATE INDEX idx_symbol_references_source_file 
+  ON symbol_references(source_file_key);
 ```
 
-### Triggers for Data Integrity
-
-```sql
--- Update the updated_at timestamp when a symbol is modified
-CREATE TRIGGER update_symbols_updated_at 
-  AFTER UPDATE ON symbols
-  FOR EACH ROW
-BEGIN
-  UPDATE symbols SET updated_at = datetime('now') WHERE qualified_name = NEW.qualified_name;
-END;
-
--- Ensure namespace and name are derived from qualified_name
-CREATE TRIGGER validate_symbol_qualified_name
-  BEFORE INSERT ON symbols
-  FOR EACH ROW
-BEGIN
-  SELECT CASE 
-    WHEN NEW.qualified_name IS NULL OR NEW.qualified_name = '' 
-    THEN RAISE(ABORT, 'qualified_name cannot be null or empty')
-  END;
-END;
+```typescript
+// 符号存储接口
+type SymbolStore = {
+  storeSymbolDefinitions: (sourceFileKey: string, symbols: Symbol[]) => Promise<void>;
+  getSymbolDefinition: (key: string) => Promise<Symbol | null>;
+  getSymbolReferences: (definitionKey: string) => Promise<SymbolRef[]>;
+  removeSymbolDefinition: (key: string) => Promise<void>;
+  removeSymbolReferences: (definitionKey: string) => Promise<void>;
+  findOrphanedSourceFiles: () => Promise<string[]>;
+};
 ```
 
-### Common Queries
+### LanceDB Semantic Indexing
 
-```sql
--- Find all functions in a specific namespace
-SELECT * FROM symbols 
-WHERE namespace = 'Utils' AND kind = 'FunctionDeclaration';
+```typescript
+type SemanticIndexEntry = {
+  symbol_key: string;             // Reference to symbol definition
+  embeddings: number[];           // Vector representation
+  keywords: string[];             // Extracted keywords
+  description: string;            // Human-readable description
+  last_indexed: Date;
+};
 
--- Find all symbols that depend on a specific symbol
-SELECT s.* FROM symbols s
-JOIN dependencies d ON s.qualified_name = d.from_qualified_name
-WHERE d.to_qualified_name = 'Utils.formatString';
+type SemanticIndexStore = {
+  indexSymbol: (symbol: Symbol) => Promise<void>;
+  searchSymbols: (query: string, limit?: number) => Promise<Symbol[]>;
+  removeSymbol: (symbolKey: string) => Promise<void>;
+};
+```
 
--- Find all symbols that a specific symbol depends on
-SELECT s.* FROM symbols s
-JOIN dependencies d ON s.qualified_name = d.to_qualified_name
-WHERE d.from_qualified_name = 'Utils.formatString';
+## Query Patterns
 
--- Find root-level symbols (no namespace)
-SELECT * FROM symbols WHERE namespace = '';
-
--- Find all namespaces and their symbol counts
-SELECT namespace, COUNT(*) as symbol_count 
-FROM symbols 
-GROUP BY namespace 
-ORDER BY symbol_count DESC;
+```typescript
+getSymbolDefinition(key: string): Promise<Symbol | null>
+getSymbolReferences(definitionKey: string): Promise<SymbolRef[]>
+getASTNodesInRange(sourceFileKey: string, startPos: number, endPos: number): Promise<ASTNode[]>
+getSymbolDependencies(symbolKey: string): Promise<Symbol[]>
 ```
