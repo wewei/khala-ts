@@ -6,7 +6,7 @@ import * as ts from "typescript";
 import parseTypeScriptProgram from "@i/parseTypeScriptProgram";
 import isSuccess from "@i/isSuccess";
 import type { CompilerOptionsWithMetadata, ParsedSourceFile } from "@d/add/types";
-import { generateFileHash } from "../utils/hashUtils";
+import { generateFileHash } from "@i/hashUtils";
 
 /**
  * Find tsconfig.json in parent directories

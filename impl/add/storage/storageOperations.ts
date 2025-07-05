@@ -3,7 +3,7 @@ import { dirname } from "node:path";
 import { Database } from "bun:sqlite";
 import type { ASTNode, Symbol, SymbolRef, SourceFileMetadata, ASTFile } from "@d/add/types";
 import { getSourceFilePath, getASTFilePath } from "@i/ensureKhalaDatabase/filePathUtils";
-import { ensureDirectory } from "../utils/directoryUtils";
+import { ensureDirectory, removeFileAndCleanup } from "@i/directoryUtils";
 
 /**
  * Generate file description from content
@@ -292,7 +292,6 @@ const removeSourceFile = (
   
   // Remove source file
   const sourceFilePath = getSourceFilePath(config.filesPath, fileHash);
-  const { removeFileAndCleanup } = require("../utils/directoryUtils");
   removeFileAndCleanup(sourceFilePath, options);
   
   // Remove AST file

@@ -2,7 +2,7 @@ import type { AddOptions } from "@d/add/types";
 import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import getKhalaRoot from "@i/khalaMain/getKhalaRoot";
 import { removeSourceFile } from "./storage/storageOperations";
-import { removeEmptyDirectories } from "./utils/directoryUtils";
+import { removeEmptyDirectories } from "@i/directoryUtils";
 
 /**
  * Remove a file from the Khala database by hash

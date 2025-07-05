@@ -2,7 +2,7 @@ import type { Node, SourceFile } from "typescript";
 import * as ts from "typescript";
 import extractSymbolsFromSourceFile from "@i/extractSymbolsFromSourceFile";
 import type { ASTNode, Symbol, SymbolKind, ParsedSourceFile } from "@d/add/types";
-import { generateSymbolKey } from "../utils/hashUtils";
+import { generateSymbolKey } from "@i/hashUtils";
 
 /**
  * Check if a node is a symbol definition

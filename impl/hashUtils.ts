@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
  * Returns a 40-character hexadecimal string
  */
 const generateRipemd160Hash = (input: string): string => {
-  return createHash('ripemd160').update(input, 'utf8').digest('hex');
+  return createHash("ripemd160").update(input, "utf8").digest("hex");
 };
 
 /**
@@ -31,5 +31,5 @@ const generateSymbolKey = (name: string, kind: string): string => {
 export {
   generateRipemd160Hash,
   generateFileHash,
-  generateSymbolKey
+  generateSymbolKey,
 }; 
