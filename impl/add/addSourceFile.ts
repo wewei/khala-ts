@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 import type { AddSourceFileResult, AddOptions } from "@d/add/types";
-import { loadCompilerOptionsForFile, parseTypeScriptProgramForFile, fileExistsInKhala } from "./pipeline/fileProcessor";
-import { processSourceFile } from "./processing/sourceFileProcessor";
-import { storeSourceFile } from "./storage/storageOperations";
-import { loadSymbolMap, updateExistingSymbols } from "./utils/symbolMapUtils";
+import { loadCompilerOptionsForFile, parseTypeScriptProgramForFile, fileExistsInKhala } from "@i/fileProcessor";
+import { processSourceFile } from "@i/sourceFileProcessor";
+import { storeSourceFile } from "@i/storageOperations";
+import { loadSymbolMap, updateExistingSymbols } from "@i/symbolMapUtils";
 
 /**
  * Add a source file to the Khala database

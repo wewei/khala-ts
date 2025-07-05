@@ -5,7 +5,7 @@ import type { AddOptions } from "@d/add/types";
 import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import getKhalaRoot from "../getKhalaRoot";
 import addSourceFile from "@i/add/addSourceFile";
-import { loadSymbolMap } from "@i/add/utils/symbolMapUtils";
+import { loadSymbolMap } from "@i/symbolMapUtils";
 
 /**
  * TODO: Implement new add command based on design document

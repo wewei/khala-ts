@@ -143,5 +143,7 @@ const fileExistsInKhala = (fileHash: string, filesPath: string): boolean => {
 export {
   loadCompilerOptionsForFile,
   parseTypeScriptProgramForFile,
-  fileExistsInKhala
+  fileExistsInKhala,
+  findTsConfig,
+  loadTsConfig,
 }; 

@@ -222,7 +222,7 @@ const indexSymbols = (
   if (options.verbose) {
     console.log(`Would update semantic index for ${symbols.length} symbols (LanceDB integration pending)`);
   }
-  // TODO: Implement LanceDB semantic indexing
+  // TODO: Implement semantic indexing with LanceDB
 };
 
 /**
@@ -261,18 +261,16 @@ const storeSourceFile = (
   }
   storeSymbolDefinitions(symbols, config.sqlitePath, options);
   
-  // Store symbol references
+  // Extract and store symbol references
   const references = extractSymbolReferences(ast, symbols);
-  if (options.verbose) {
-    console.log(`Storing ${references.length} symbol references`);
-  }
   storeSymbolReferences(references, config.sqlitePath, options);
   
   // Update semantic index
-  if (options.verbose) {
-    console.log(`Updating semantic index for ${symbols.length} symbols`);
-  }
   indexSymbols(symbols, options);
+  
+  if (options.verbose) {
+    console.log(`Successfully stored file in database`);
+  }
 };
 
 /**
@@ -319,11 +317,11 @@ const removeSourceFile = (
 
 export {
   storeSourceFile,
+  removeSourceFile,
   storeSourceFileContent,
   storeASTNodes,
   storeSymbolDefinitions,
   storeSymbolReferences,
-  indexSymbols,
   extractSymbolReferences,
-  removeSourceFile
+  indexSymbols,
 }; 

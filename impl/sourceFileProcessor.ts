@@ -205,33 +205,21 @@ const processSourceFile = (
     console.log(`Extracting AST nodes from source file`);
   }
   
-  // Extract AST nodes from source file
-  const astNodes = extractASTNodes(parsedFile);
+  // Extract AST nodes
+  const ast = extractASTNodes(parsedFile);
   
   if (options.verbose) {
-    console.log(`Found ${astNodes.length} AST nodes`);
+    console.log(`Found ${ast.length} AST nodes`);
   }
   
   // Extract symbols from AST nodes
-  const symbols = extractSymbolsFromAST(astNodes, parsedFile.filePath, options);
+  const symbols = extractSymbolsFromAST(ast, parsedFile.filePath, options);
   
   if (options.verbose) {
     console.log(`Extracted ${symbols.length} symbols from AST nodes`);
   }
   
-  // Generate symbol keys (40-digit hex)
-  const symbolsWithKeys = symbols.map(symbol => {
-    const key = generateSymbolKey(symbol.name, symbol.kind);
-    if (options.verbose) {
-      console.log(`Generated key for symbol '${symbol.name}': ${key}`);
-    }
-    return {
-      ...symbol,
-      key
-    };
-  });
-  
-  return { ast: astNodes, symbols: symbolsWithKeys };
+  return { ast, symbols };
 };
 
 export {
@@ -239,5 +227,9 @@ export {
   extractASTNodes,
   extractSymbolsFromAST,
   isSymbolDefinition,
-  mapNodeKindToSymbolKind
+  mapNodeKindToSymbolKind,
+  generateSymbolDescription,
+  extractDependencies,
+  hasExportModifier,
+  hasDefaultModifier,
 }; 
