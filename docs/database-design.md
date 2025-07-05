@@ -262,29 +262,30 @@ Khala uses a hybrid storage approach that optimizes for different data types:
 
 #### Source File Storage
 
-Source files are stored in the file system using a hash-based directory structure:
+Source files and AST files are stored in the same directory structure using hash-based organization:
 
 ```typescript
 type FileSystemStorage = {
   basePath: string;               // Base directory for all storage
-  sourceFilesPath: string;        // Path to source files directory
-  astFilesPath: string;           // Path to AST files directory
+  filesPath: string;              // Path to files directory (contains both source and AST)
 };
 
-// File path structure: {basePath}/source/{first2chars}/{rest}.ts
-// Example: /data/khala/source/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// File path structure: {basePath}/files/{first2chars}/{rest}.ts
+// AST path structure: {basePath}/files/{first2chars}/{rest}.ast.json
+// Example: /data/khala/files/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// Example: /data/khala/files/a1/b2c3d4e5f6.ast.json (same hash, AST data)
 // 使用 RIPEMD-160 hash 的前2位字符作为目录名
 
 const getSourceFilePath = (hash: string): string => {
   const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
   const rest = hash.substring(2);            // 剩余38位
-  return path.join(basePath, 'source', first2Chars, `${rest}.ts`);
+  return path.join(basePath, 'files', first2Chars, `${rest}.ts`);
 };
 
 const getASTFilePath = (hash: string): string => {
   const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
   const rest = hash.substring(2);            // 剩余38位
-  return path.join(basePath, 'ast', first2Chars, `${rest}.ast.json`);
+  return path.join(basePath, 'files', first2Chars, `${rest}.ast.json`);
 };
 ```
 
@@ -306,13 +307,13 @@ type FilePathGenerator = {
 };
 
 // 示例路径结构
-// 源文件: /data/khala/source/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
-// AST文件: /data/khala/ast/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// 源文件: /data/khala/files/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// AST文件: /data/khala/files/a1/b2c3d4e5f6.ast.json (same hash, AST data)
 ```
 
 #### AST Storage
 
-AST data is stored as JSON files alongside source files:
+AST data is stored as JSON files alongside source files in the same directory:
 
 ```typescript
 type ASTFile = {
@@ -322,7 +323,7 @@ type ASTFile = {
 
 type ASTNodeWithoutSourceFileKey = Omit<ASTNode, 'sourceFileKey'>;
 
-// Example AST file: /data/khala/ast/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
+// Example AST file: /data/khala/files/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
 {
   "version": 1,
   "nodes": [

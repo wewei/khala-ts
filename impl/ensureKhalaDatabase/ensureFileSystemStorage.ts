@@ -2,30 +2,24 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { KhalaDatabaseConfig, DatabaseInitResult } from "@d/database/khala";
 
-const createHashBasedDirectories = (basePath: string): void => {
-  // Create directories for hash-based storage (00-ff)
-  // This creates 256 subdirectories for RIPEMD-160 hash distribution
-  for (let i = 0; i < 256; i++) {
-    const hexDir = i.toString(16).padStart(2, '0');
-    const dirPath = join(basePath, hexDir);
-    if (!existsSync(dirPath)) {
-      mkdirSync(dirPath, { recursive: true });
-    }
-  }
-};
-
 const ensureFileSystemStorage = (config: KhalaDatabaseConfig): DatabaseInitResult => {
   try {
-    // Create hash-based directory structure for source files
-    createHashBasedDirectories(config.sourceFilesPath);
+    // Only create the main directory structure
+    // Hash-based subdirectories will be created on-demand when files are added
     
-    // Create hash-based directory structure for AST files
-    createHashBasedDirectories(config.astFilesPath);
+    // Ensure files directory exists (contains both source and AST files)
+    if (!existsSync(config.filesPath)) {
+      mkdirSync(config.filesPath, { recursive: true });
+    }
+    
+    // Ensure semantic index directory exists
+    if (!existsSync(config.semanticIndexPath)) {
+      mkdirSync(config.semanticIndexPath, { recursive: true });
+    }
     
     return {
       success: true,
-      sourceFilesPath: config.sourceFilesPath,
-      astFilesPath: config.astFilesPath,
+      filesPath: config.filesPath,
     };
   } catch (error) {
     return {

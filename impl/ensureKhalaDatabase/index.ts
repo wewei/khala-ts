@@ -7,8 +7,7 @@ import ensureSemanticIndex from "./ensureSemanticIndex";
 
 const createDirectoryStructure = (folder: string): void => {
   const dirs = [
-    join(folder, "source"),
-    join(folder, "ast"),
+    join(folder, "files"),
     join(folder, "semantic-index")
   ];
   
@@ -31,8 +30,7 @@ const ensureKhalaDatabase = (folder: string): DatabaseInitResult => {
 
     const config: KhalaDatabaseConfig = {
       folder,
-      sourceFilesPath: join(folder, "source"),
-      astFilesPath: join(folder, "ast"),
+      filesPath: join(folder, "files"),
       sqlitePath: join(folder, "khala.db"),
       semanticIndexPath: join(folder, "semantic-index"),
     };
@@ -66,8 +64,7 @@ const ensureKhalaDatabase = (folder: string): DatabaseInitResult => {
 
     return {
       success: true,
-      sourceFilesPath: config.sourceFilesPath,
-      astFilesPath: config.astFilesPath,
+      filesPath: config.filesPath,
       sqlitePath: config.sqlitePath,
       semanticIndexPath: config.semanticIndexPath,
     };

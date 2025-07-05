@@ -58,27 +58,9 @@ const createIndexes = (db: Database): void => {
     ON symbol_references(source_file_key)`);
 };
 
-const createTriggers = (db: Database): void => {
-  // Trigger to automatically update the updated_at timestamp
-  db.run(`
-    CREATE TRIGGER IF NOT EXISTS update_symbols_updated_at
-    AFTER UPDATE ON symbols
-    BEGIN
-      UPDATE symbols SET updated_at = CURRENT_TIMESTAMP WHERE qualified_name = NEW.qualified_name;
-    END
-  `);
-};
-
 const ensureSymbolDatabase = (config: KhalaDatabaseConfig): DatabaseInitResult => {
   try {
-    // Check if database already exists
-    if (existsSync(config.sqlitePath)) {
-      return {
-        success: true,
-        sqlitePath: config.sqlitePath,
-      };
-    }
-    // Create or open database
+    // Always open or create the database, and always ensure schema
     const db = new Database(config.sqlitePath);
     // Enable foreign keys
     db.run("PRAGMA foreign_keys = ON");
@@ -88,8 +70,6 @@ const ensureSymbolDatabase = (config: KhalaDatabaseConfig): DatabaseInitResult =
     createSymbolReferencesTable(db);
     // Create indexes
     createIndexes(db);
-    // Create triggers
-    createTriggers(db);
     // Close database connection
     db.close();
     return {

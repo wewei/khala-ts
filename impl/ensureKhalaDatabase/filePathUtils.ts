@@ -2,24 +2,24 @@ import { join } from "node:path";
 
 /**
  * Generate source file path based on RIPEMD-160 hash
- * Path structure: {basePath}/source/{first2chars}/{rest}.ts
- * Example: /data/khala/source/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
+ * Path structure: {basePath}/{first2chars}/{rest}.ts
+ * Example: /data/khala/files/a1/b2c3d4e5f6.ts (RIPEMD-160 hash: a1b2c3d4e5f6...)
  */
 const getSourceFilePath = (basePath: string, hash: string): string => {
   const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
   const rest = hash.substring(2);            // 剩余38位
-  return join(basePath, 'source', first2Chars, `${rest}.ts`);
+  return join(basePath, first2Chars, `${rest}.ts`);
 };
 
 /**
  * Generate AST file path based on RIPEMD-160 hash
- * Path structure: {basePath}/ast/{first2chars}/{rest}.ast.json
- * Example: /data/khala/ast/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
+ * Path structure: {basePath}/{first2chars}/{rest}.ast.json
+ * Example: /data/khala/files/a1/b2c3d4e5f6.ast.json (RIPEMD-160 hash: a1b2c3d4e5f6...)
  */
 const getASTFilePath = (basePath: string, hash: string): string => {
   const first2Chars = hash.substring(0, 2);  // RIPEMD-160 hash 前2位
   const rest = hash.substring(2);            // 剩余38位
-  return join(basePath, 'ast', first2Chars, `${rest}.ast.json`);
+  return join(basePath, first2Chars, `${rest}.ast.json`);
 };
 
 /**
