@@ -25,9 +25,18 @@ khala add <path> [options]
 ```typescript
 function addSourceFile(
   sourceFilePath: string, 
-  symbolMap: Record<string, string> = {} // Optional symbol map from symbol name to UUID
+  symbolMap: Record<string, string> = {}, // Optional symbol map from symbol name to UUID
+  options: { verbose?: boolean } = {}
 ) {
+  if (options.verbose) {
+    console.log(`Processing file: ${sourceFilePath}`);
+  }
+
   const compilerOptions = loadCompilerOptionsForFile(sourceFilePath);
+  if (options.verbose) {
+    console.log(`Loaded compiler options from: ${compilerOptions.configFilePath}`);
+  }
+
   const sourceFile = parseTypeScriptProgram({ 
     filePath: sourceFilePath, 
     compilerOptions 
@@ -35,17 +44,43 @@ function addSourceFile(
 
   // Reject if the file doesn't parse
   if (!sourceFile.success) {
+    if (options.verbose) {
+      console.error(`Failed to parse file: ${sourceFile.error}`);
+    }
     return { success: false, error: sourceFile.error };
   }
 
+  if (options.verbose) {
+    console.log(`Successfully parsed TypeScript file`);
+  }
+
   const fileName = getFileHash(sourceFile);
+  if (options.verbose) {
+    console.log(`Generated file hash: ${fileName}`);
+  }
   
   if (fileExistsInKhala(fileName)) {
+    if (options.verbose) {
+      console.log(`File already exists in database, skipping`);
+    }
     return { success: true, message: "File already exists in database" };
   }
 
-  const { ast, symbols } = processSourceFile(sourceFile);
-  storeSourceFile(fileName, ast, symbols);
+  if (options.verbose) {
+    console.log(`Processing source file for AST and symbols`);
+  }
+
+  const { ast, symbols } = processSourceFile(sourceFile, options);
+  
+  if (options.verbose) {
+    console.log(`Extracted ${ast.length} AST nodes and ${symbols.length} symbols`);
+  }
+
+  storeSourceFile(fileName, ast, symbols, options);
+  
+  if (options.verbose) {
+    console.log(`Successfully stored file in database`);
+  }
   
   return { success: true, symbolsCount: symbols.length };
 }
@@ -106,21 +141,42 @@ const fileExistsInKhala = (fileHash: string): boolean => {
 
 #### 2.1 Process Source File
 ```typescript
-const processSourceFile = (sourceFile: ParsedSourceFile): {
+const processSourceFile = (
+  sourceFile: ParsedSourceFile, 
+  options: { verbose?: boolean } = {}
+): {
   ast: ASTNode[];
   symbols: Symbol[];
 } => {
+  if (options.verbose) {
+    console.log(`Extracting AST nodes from source file`);
+  }
+  
   // Extract AST nodes from source file
   const astNodes = extractASTNodes(sourceFile);
   
+  if (options.verbose) {
+    console.log(`Found ${astNodes.length} AST nodes`);
+  }
+  
   // Extract symbols from AST nodes
-  const symbols = extractSymbolsFromAST(astNodes, sourceFile.filePath);
+  const symbols = extractSymbolsFromAST(astNodes, sourceFile.filePath, options);
+  
+  if (options.verbose) {
+    console.log(`Extracted ${symbols.length} symbols from AST nodes`);
+  }
   
   // Generate symbol keys (40-digit hex)
-  const symbolsWithKeys = symbols.map(symbol => ({
-    ...symbol,
-    key: generateSymbolKey(symbol.name, symbol.kind)
-  }));
+  const symbolsWithKeys = symbols.map(symbol => {
+    const key = generateSymbolKey(symbol.name, symbol.kind);
+    if (options.verbose) {
+      console.log(`Generated key for symbol '${symbol.name}': ${key}`);
+    }
+    return {
+      ...symbol,
+      key
+    };
+  });
   
   return { ast: astNodes, symbols: symbolsWithKeys };
 };
@@ -177,39 +233,74 @@ const extractSymbolsFromAST = (
 const storeSourceFile = (
   fileHash: string, 
   ast: ASTNode[], 
-  symbols: Symbol[]
+  symbols: Symbol[],
+  options: { verbose?: boolean } = {}
 ): void => {
+  if (options.verbose) {
+    console.log(`Storing source file with hash: ${fileHash}`);
+  }
+  
   // Store source file content
-  storeSourceFileContent(fileHash, sourceFile.content);
+  if (options.verbose) {
+    console.log(`Storing source file content`);
+  }
+  storeSourceFileContent(fileHash, sourceFile.content, options);
   
   // Store AST nodes
-  storeASTNodes(fileHash, ast);
+  if (options.verbose) {
+    console.log(`Storing ${ast.length} AST nodes`);
+  }
+  storeASTNodes(fileHash, ast, options);
   
   // Store symbol definitions
-  storeSymbolDefinitions(symbols);
+  if (options.verbose) {
+    console.log(`Storing ${symbols.length} symbol definitions`);
+  }
+  storeSymbolDefinitions(symbols, options);
   
   // Store symbol references
   const references = extractSymbolReferences(ast, symbols);
-  storeSymbolReferences(references);
+  if (options.verbose) {
+    console.log(`Storing ${references.length} symbol references`);
+  }
+  storeSymbolReferences(references, options);
   
   // Update semantic index
-  indexSymbols(symbols);
+  if (options.verbose) {
+    console.log(`Updating semantic index for ${symbols.length} symbols`);
+  }
+  indexSymbols(symbols, options);
 };
 ```
 
 #### 3.2 Store Source File Content
 ```typescript
-const storeSourceFileContent = (fileHash: string, content: string): void => {
+const storeSourceFileContent = (
+  fileHash: string, 
+  content: string, 
+  options: { verbose?: boolean } = {}
+): void => {
   const filePath = getSourceFilePath(khalaConfig.sourceFilesPath, fileHash);
   const dir = dirname(filePath);
   
+  if (options.verbose) {
+    console.log(`Writing source file to: ${filePath}`);
+  }
+  
   // Ensure directory exists
   if (!existsSync(dir)) {
+    if (options.verbose) {
+      console.log(`Creating directory: ${dir}`);
+    }
     mkdirSync(dir, { recursive: true });
   }
   
   // Write file content
   writeFileSync(filePath, content, 'utf-8');
+  
+  if (options.verbose) {
+    console.log(`Wrote ${content.length} bytes to source file`);
+  }
   
   // Store metadata in SQLite
   const metadata = {
@@ -218,6 +309,10 @@ const storeSourceFileContent = (fileHash: string, content: string): void => {
     size: content.length,
     createdAt: new Date().toISOString()
   };
+  
+  if (options.verbose) {
+    console.log(`Storing metadata: ${metadata.description} (${metadata.size} bytes)`);
+  }
   
   insertSourceFileMetadata(metadata);
 };
@@ -251,10 +346,21 @@ const storeASTNodes = (fileHash: string, astNodes: ASTNode[]): void => {
 
 #### 3.4 Store Symbol Definitions
 ```typescript
-const storeSymbolDefinitions = (symbols: Symbol[]): void => {
+const storeSymbolDefinitions = (
+  symbols: Symbol[], 
+  options: { verbose?: boolean } = {}
+): void => {
   const db = new Database(khalaConfig.sqlitePath);
   
+  if (options.verbose) {
+    console.log(`Opening database: ${khalaConfig.sqlitePath}`);
+  }
+  
   for (const symbol of symbols) {
+    if (options.verbose) {
+      console.log(`Storing symbol: ${symbol.name} (${symbol.kind}) at positions ${symbol.startPos}-${symbol.endPos}`);
+    }
+    
     db.run(`
       INSERT INTO symbol_definitions (
         key, source_file_key, start_pos, end_pos, 
@@ -274,6 +380,10 @@ const storeSymbolDefinitions = (symbols: Symbol[]): void => {
   }
   
   db.close();
+  
+  if (options.verbose) {
+    console.log(`Stored ${symbols.length} symbol definitions in database`);
+  }
 };
 ```
 
@@ -323,6 +433,37 @@ const updateExistingSymbols = (
   });
 };
 ```
+
+## Verbose Logging
+
+The `--verbose` option provides detailed logging throughout the add process:
+
+### 1. File Processing Logs
+- File path being processed
+- Compiler options loaded
+- Parsing success/failure
+- File hash generation
+- File existence checks
+
+### 2. AST and Symbol Extraction Logs
+- Number of AST nodes found
+- Number of symbols extracted
+- Individual symbol key generation
+- Symbol details (name, kind, position)
+
+### 3. Storage Operation Logs
+- File paths being written
+- Directory creation
+- Database operations
+- Symbol definition storage
+- Reference storage
+- Semantic indexing updates
+
+### 4. Performance Metrics
+- File sizes
+- Processing times
+- Database operation counts
+- Memory usage (if available)
 
 ## Error Handling
 
