@@ -1,7 +1,7 @@
 import type { AddOptions } from "@d/add/types";
 import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import getKhalaRoot from "@i/khalaMain/getKhalaRoot";
-import { removeSourceFile } from "@i/storageOperations";
+import removeSourceFile from "@i/removeSourceFile";
 import { removeEmptyDirectories } from "@i/directoryUtils";
 
 /**

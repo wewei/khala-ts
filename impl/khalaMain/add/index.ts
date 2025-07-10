@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import type { AddOptions } from "@d/add/types";
 import ensureKhalaDatabase from "@i/ensureKhalaDatabase";
 import getKhalaRoot from "../getKhalaRoot";
-import addSourceFile from "@i/add/addSourceFile";
+import addSourceFile from "@i/addSourceFile";
 import { loadSymbolMap } from "@i/symbolMapUtils";
 
 /**

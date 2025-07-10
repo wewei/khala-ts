@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import type { AddSourceFileResult, AddOptions } from "@d/add/types";
 import { loadCompilerOptionsForFile, parseTypeScriptProgramForFile, fileExistsInKhala } from "@i/fileProcessor";
 import { processSourceFile } from "@i/sourceFileProcessor";
-import { storeSourceFile } from "@i/storageOperations";
+import storeSourceFile from "@i/storeSourceFile";
 import { loadSymbolMap, updateExistingSymbols } from "@i/symbolMapUtils";
 
 /**

@@ -27,6 +27,7 @@ describe("ensureKhalaDatabase", () => {
     const result: DatabaseInitResult = ensureKhalaDatabase(testFolder);
     
     expect(result.success).toBe(true);
+    expect(result.filesPath).toBe(join(testFolder, "files"));
     expect(result.sqlitePath).toBe(join(testFolder, "khala.db"));
     expect(result.semanticIndexPath).toBe(join(testFolder, "semantic-index"));
     expect(result.error).toBeUndefined();
@@ -36,16 +37,16 @@ describe("ensureKhalaDatabase", () => {
     const dbPath = join(testFolder, "khala.db");
     const db = new Database(dbPath);
     
-    // Check if tables exist
+    // Check if tables exist - updated to match current schema
     const tables = db.prepare(`
       SELECT name FROM sqlite_master 
-      WHERE type='table' AND name IN ('symbols', 'dependencies', 'namespaces')
+      WHERE type='table' AND name IN ('source_file_metadata', 'symbol_definitions', 'symbol_references')
     `).all();
     
     expect(tables).toHaveLength(3);
-    expect(tables.map((t: any) => t.name)).toContain("symbols");
-    expect(tables.map((t: any) => t.name)).toContain("dependencies");
-    expect(tables.map((t: any) => t.name)).toContain("namespaces");
+    expect(tables.map((t: any) => t.name)).toContain("source_file_metadata");
+    expect(tables.map((t: any) => t.name)).toContain("symbol_definitions");
+    expect(tables.map((t: any) => t.name)).toContain("symbol_references");
     
     // Check if indexes exist
     const indexes = db.prepare(`
@@ -55,6 +56,13 @@ describe("ensureKhalaDatabase", () => {
     
     expect(indexes.length).toBeGreaterThan(0);
     
+    // Verify specific indexes exist
+    const indexNames = indexes.map((idx: any) => idx.name);
+    expect(indexNames).toContain("idx_symbol_definitions_source_file");
+    expect(indexNames).toContain("idx_symbol_definitions_name");
+    expect(indexNames).toContain("idx_symbol_references_definition");
+    expect(indexNames).toContain("idx_symbol_references_source_file");
+    
     db.close();
   });
   
@@ -63,8 +71,19 @@ describe("ensureKhalaDatabase", () => {
     
     const subdirs = readdirSync(semanticIndexPath);
     expect(subdirs).toContain("symbols");
-    expect(subdirs).toContain("descriptions");
-    expect(subdirs).toContain("content");
+    expect(subdirs).toContain("embeddings");
+  });
+  
+  it("should create files directory structure", () => {
+    const filesPath = join(testFolder, "files");
+    
+    // Check that the files directory exists
+    expect(readdirSync(testFolder)).toContain("files");
+    
+    // The files directory should be empty initially
+    // Hash-based subdirectories will be created on-demand when files are added
+    const filesDirContents = readdirSync(filesPath);
+    expect(filesDirContents.length).toBe(0);
   });
   
   it("should handle existing database gracefully", () => {
